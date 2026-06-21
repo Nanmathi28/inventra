@@ -1,0 +1,40 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Backend
+inventra_backend/venv/
+inventra_backend/__pycache__/
+inventra_backend/.env
+inventra_backend/**/*.pyc
+
+# Python
+*.pyc
+__pycache__/
+
+# Frontend build
+inventra_frontend/node_modules/
+inventra_frontend/dist/
+
+venv/
