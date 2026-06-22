@@ -1,38 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Package, FileText, Clock, Bell, ChevronRight, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Sun, Moon, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-const availabilityData = [
-  { name: 'Paracetamol 500mg', category: 'Analgesics', status: 'low', stock: 20, price: '₹2.50', available: true },
-  { name: 'Cetirizine 10mg', category: 'Antihistamines', status: 'healthy', stock: 380, price: '₹3.50', available: true },
-  { name: 'Metformin 500mg', category: 'Diabetes', status: 'healthy', stock: 520, price: '₹4.20', available: true },
-  { name: 'Amoxicillin 250mg', category: 'Antibiotics', status: 'low', stock: 145, price: '₹8.00', available: true },
-  { name: 'Atorvastatin 10mg', category: 'Cardiovascular', status: 'expired', stock: 0, price: '₹7.20', available: false },
-  { name: 'Vitamin C 500mg', category: 'Vitamins', status: 'low', stock: 42, price: '₹1.80', available: true },
-  { name: 'Insulin Glargine', category: 'Diabetes', status: 'critical', stock: 8, price: '₹42.00', available: true },
-  { name: 'Omeprazole 20mg', category: 'Gastro', status: 'healthy', stock: 210, price: '₹5.50', available: true },
-];
-
-const orders = [
-  { id: 'ORD-2024-001', medicines: 'Paracetamol 500mg x2, Cetirizine x1', date: '2 Jun 2026', total: '₹9.50', status: 'delivered' },
-  { id: 'ORD-2024-002', medicines: 'Metformin 500mg x3', date: '28 May 2026', total: '₹12.60', status: 'delivered' },
-  { id: 'ORD-2024-003', medicines: 'Vitamin C 500mg x5, Omeprazole x2', date: '18 May 2026', total: '₹20.00', status: 'delivered' },
-  { id: 'ORD-2024-004', medicines: 'Amoxicillin 250mg x1', date: '5 May 2026', total: '₹8.00', status: 'delivered' },
-];
-
-const prescriptions = [
-  { id: 'RX-20240601', doctor: 'Dr. Anil Mehta', date: '1 Jun 2026', medicines: 'Metformin 500mg, Atorvastatin 10mg', valid: true },
-  { id: 'RX-20240520', doctor: 'Dr. Sunita Rao', date: '20 May 2026', medicines: 'Amoxicillin 250mg, Paracetamol 500mg', valid: false },
-];
+import { api } from '../../services/api';
 
 function StatusIcon({ status }) {
   if (status === 'healthy') return <CheckCircle size={15} className="text-green-500" />;
   if (status === 'low') return <AlertCircle size={15} className="text-amber-500" />;
-  return <XCircle size={15} className="text-red-500" />;
+  if (status === 'critical') return <XCircle size={15} className="text-red-500" />;
+  return <XCircle size={15} className="text-gray-500" />;
 }
 
 export default function CustomerPortal() {
@@ -41,10 +20,42 @@ export default function CustomerPortal() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('availability');
+  const [portalData, setPortalData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = availabilityData.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
+  useEffect(() => {
+    api.get('/portal')
+      .then(data => setPortalData(data))
+      .catch(err => setError(err.message || 'Could not load portal data'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const availabilityData = portalData?.available_medicines || [];
+  const orders = portalData?.orders || [];
+  const prescriptions = portalData?.prescriptions || [];
+
+  const filtered = availabilityData.filter(m => 
+    m.medicine_name.toLowerCase().includes(search.toLowerCase())
+  );
 
   function handleLogout() { logout(); navigate('/'); }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-gray-500 dark:text-gray-400">Loading portal data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-red-500 dark:text-red-400">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -136,73 +147,91 @@ export default function CustomerPortal() {
                 className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-gray-800 dark:text-gray-100 placeholder-gray-400" />
             </div>
             <div className="bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden">
-              {filtered.map((m, i) => (
-                <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 dark:border-gray-700/40 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                  <StatusIcon status={m.status} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{m.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{m.category} · {m.price}/unit</p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-xs font-semibold ${m.status === 'healthy' ? 'text-green-600' : m.status === 'low' ? 'text-amber-600' : 'text-red-600'}`}>
-                      {m.available ? `${m.stock} in stock` : 'Unavailable'}
-                    </p>
-                    <p className="text-[10px] text-gray-400 capitalize mt-0.5">{m.status}</p>
-                  </div>
-                  {m.available && (
-                    <button className="ml-2 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-semibold transition-colors">
-                      Request
-                    </button>
-                  )}
+              {filtered.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  No medicines available matching your search.
                 </div>
-              ))}
+              ) : (
+                filtered.map((m, i) => (
+                  <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 dark:border-gray-700/40 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
+                    <StatusIcon status={m.status} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{m.medicine_name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{m.category}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-xs font-semibold ${m.status === 'healthy' ? 'text-green-600' : m.status === 'low' ? 'text-amber-600' : 'text-red-600'}`}>
+                        {m.available ? `${m.stock} in stock` : 'Unavailable'}
+                      </p>
+                      <p className="text-[10px] text-gray-400 capitalize mt-0.5">{m.status}</p>
+                    </div>
+                    {m.available && (
+                      <button className="ml-2 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-semibold transition-colors">
+                        Request
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </motion.div>
         )}
 
         {tab === 'orders' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden">
-            {orders.map((o, i) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 dark:border-gray-700/40 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle size={16} className="text-green-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{o.id}</p>
-                  <p className="text-xs text-gray-400 truncate mt-0.5">{o.medicines}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{o.total}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{o.date}</p>
-                </div>
-                <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-semibold capitalize">{o.status}</span>
+            {orders.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                No order history available.
               </div>
-            ))}
+            ) : (
+              orders.map((o, i) => (
+                <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 dark:border-gray-700/40 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle size={16} className="text-green-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{o.id}</p>
+                    <p className="text-xs text-gray-400 truncate mt-0.5">{o.medicines}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{o.total}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{o.date}</p>
+                  </div>
+                  <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-semibold capitalize">{o.status}</span>
+                </div>
+              ))
+            )}
           </motion.div>
         )}
 
         {tab === 'prescriptions' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-            {prescriptions.map((p, i) => (
-              <div key={i} className={`bg-white dark:bg-gray-800/90 border rounded-2xl p-5 ${p.valid ? 'border-emerald-200 dark:border-emerald-700/50' : 'border-gray-200 dark:border-gray-700 opacity-60'}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-gray-100">{p.id}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Prescribed by {p.doctor}</p>
-                    <p className="text-xs text-gray-400 mt-1">{p.medicines}</p>
-                    <p className="text-xs text-gray-400 mt-1">Date: {p.date}</p>
-                  </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ${p.valid ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}>
-                    {p.valid ? 'Active' : 'Expired'}
-                  </span>
-                </div>
-                {p.valid && (
-                  <button className="mt-3 w-full py-2 border border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors flex items-center justify-center gap-2">
-                    Fill Prescription <ChevronRight size={14} />
-                  </button>
-                )}
+            {prescriptions.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                No prescriptions available.
               </div>
-            ))}
+            ) : (
+              prescriptions.map((p, i) => (
+                <div key={i} className={`bg-white dark:bg-gray-800/90 border rounded-2xl p-5 ${p.valid ? 'border-emerald-200 dark:border-emerald-700/50' : 'border-gray-200 dark:border-gray-700 opacity-60'}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-gray-800 dark:text-gray-100">{p.id}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Prescribed by {p.doctor}</p>
+                      <p className="text-xs text-gray-400 mt-1">{p.medicines}</p>
+                      <p className="text-xs text-gray-400 mt-1">Date: {p.date}</p>
+                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ${p.valid ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}>
+                      {p.valid ? 'Active' : 'Expired'}
+                    </span>
+                  </div>
+                  {p.valid && (
+                    <button className="mt-3 w-full py-2 border border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors flex items-center justify-center gap-2">
+                      Fill Prescription <ChevronRight size={14} />
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
           </motion.div>
         )}
       </div>

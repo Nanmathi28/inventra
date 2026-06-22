@@ -19,95 +19,73 @@ function fmt(v) {
 
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [restock, setRestock] = useState(null);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    api.get('/dashboard/summary')
-      .then(data => setSummary(data))
-      .catch(err => setError(err.message || 'Could not load dashboard summary'))
+    Promise.all([
+      api.get('/dashboard/summary'),
+      api.get('/analytics'),
+      api.get('/restocking/recommendations'),
+      api.get('/alerts')
+    ])
+      .then(([summaryData, analyticsData, restockData, alertsData]) => {
+        setSummary(summaryData);
+        setAnalytics(analyticsData);
+        setRestock(restockData);
+        setAlerts(alertsData.slice(0, 5));
+      })
+      .catch(err => setError(err.message || 'Could not load dashboard data'))
       .finally(() => setLoading(false));
   }, []);
 
   const kpis = [
-    { icon: <Pill size={20} />, label: 'Total Medicines', value: summary ? summary.total_medicines.toString() : '284', sub: '+12 added this month', trend: '+4.4% vs last month', color: 'blue', delay: 0 },
-    { icon: <DollarSign size={20} />, label: 'Inventory Items', value: summary ? summary.total_inventory_items.toString() : '312', sub: 'Active inventory rows', trend: '+3.2% vs last month', color: 'green', delay: 0.05 },
-    { icon: <TrendingUp size={20} />, label: 'Low Stock Items', value: summary ? summary.low_stock_items.toString() : '18', sub: 'Reorder soon', trend: '5 new today', color: 'amber', delay: 0.1 },
-    { icon: <AlertCircle size={20} />, label: 'Critical Medicines', value: summary ? summary.critical_stock_items.toString() : '6', sub: 'Immediate action', trend: 'Action required', color: 'red', delay: 0.15 },
-    { icon: <Calendar size={20} />, label: 'Near Expiry', value: summary ? summary.near_expiry_items.toString() : '9', sub: 'Within 30 days', trend: 'Review soon', color: 'amber', delay: 0.2 },
-    { icon: <Boxes size={20} />, label: 'Suppliers', value: summary ? summary.total_suppliers.toString() : '12', sub: 'Active suppliers', color: 'purple', delay: 0.25 },
+    { icon: <Pill size={20} />, label: 'Total Medicines', value: summary ? summary.total_medicines.toString() : '0', sub: 'Total registered', trend: '', color: 'blue', delay: 0 },
+    { icon: <DollarSign size={20} />, label: 'Inventory Items', value: summary ? summary.total_inventory_items.toString() : '0', sub: 'Active inventory rows', trend: '', color: 'green', delay: 0.05 },
+    { icon: <TrendingUp size={20} />, label: 'Low Stock Items', value: summary ? summary.low_stock_items.toString() : '0', sub: 'Reorder soon', trend: '', color: 'amber', delay: 0.1 },
+    { icon: <AlertCircle size={20} />, label: 'Critical Medicines', value: summary ? summary.critical_stock_items.toString() : '0', sub: 'Immediate action', trend: '', color: 'red', delay: 0.15 },
+    { icon: <Calendar size={20} />, label: 'Near Expiry', value: summary ? summary.near_expiry_items.toString() : '0', sub: 'Within 30 days', trend: '', color: 'amber', delay: 0.2 },
+    { icon: <Boxes size={20} />, label: 'Suppliers', value: summary ? summary.total_suppliers.toString() : '0', sub: 'Active suppliers', color: 'purple', delay: 0.25 },
   ];
 
   const alertColors = { critical: 'red', low: 'amber', expiry: 'amber', forecast: 'blue', restock: 'green' };
 
-  const salesData = [
-  { month: 'Jan', sales: 45000, forecast: 48000 },
-  { month: 'Feb', sales: 52000, forecast: 55000 },
-  { month: 'Mar', sales: 49000, forecast: 53000 },
-  { month: 'Apr', sales: 61000, forecast: 64000 },
-  { month: 'May', sales: 58000, forecast: 62000 },
-  { month: 'Jun', sales: null, forecast: 68000 }
-];
+  // Use analytics data or empty arrays
+  const salesData = analytics?.monthly_trends?.map(t => ({
+    month: t.month,
+    sales: t.value > 0 ? t.value : null,
+    forecast: null
+  })) || [];
 
-const inventoryHealth = [
-  { name: 'Healthy', value: 220 },
-  { name: 'Low Stock', value: 18 },
-  { name: 'Critical', value: 6 },
-  { name: 'Expired', value: 3 }
-];
+  const inventoryHealth = analytics?.stock_status_distribution || [];
+  const categoryDemand = analytics?.category_distribution || [];
+  const expiryData = analytics?.expiry_risk_distribution || [];
 
-const categoryDemand = [
-  { category: 'Antibiotics', demand: 420, color: '#3b82f6' },
-  { category: 'Pain Relief', demand: 380, color: '#22c55e' },
-  { category: 'Vitamins', demand: 310, color: '#f59e0b' },
-  { category: 'Diabetes', demand: 270, color: '#ef4444' }
-];
+  const restockItems = restock?.recommendations?.slice(0, 5).map(r => ({
+    medicine: r.medicine_name,
+    stock: r.current_stock,
+    suggested: r.recommended_reorder_qty,
+    priority: r.priority_level === 'critical' ? 'red' : r.priority_level === 'high' ? 'amber' : 'green'
+  })) || [];
 
-const expiryData = [
-  { range: '0-30 Days', count: 9, color: '#ef4444' },
-  { range: '31-60 Days', count: 12, color: '#f59e0b' },
-  { range: '61-90 Days', count: 18, color: '#22c55e' }
-];
-
-const alerts = [
-  {
-    id: 1,
-    type: 'critical',
-    title: 'Critical Stock Alert',
-    desc: 'Paracetamol stock below reorder level',
-    time: '10 min ago',
-    read: false
-  },
-  {
-    id: 2,
-    type: 'expiry',
-    title: 'Expiry Warning',
-    desc: 'Vitamin C batch expires in 20 days',
-    time: '1 hour ago',
-    read: false
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-gray-500 dark:text-gray-400">Loading dashboard...</div>
+      </div>
+    );
   }
-];
 
-const restockItems = [
-  {
-    medicine: 'Paracetamol 500mg',
-    stock: 12,
-    suggested: 100,
-    priority: 'red'
-  },
-  {
-    medicine: 'Cetirizine',
-    stock: 20,
-    suggested: 80,
-    priority: 'amber'
-  },
-  {
-    medicine: 'Vitamin C',
-    stock: 35,
-    suggested: 60,
-    priority: 'green'
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-red-500 dark:text-red-400">Error: {error}</div>
+      </div>
+    );
   }
-];
 
   return (
     <div className="space-y-6">

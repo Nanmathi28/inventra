@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, medicines, inventory, suppliers, expiry, alerts, dashboard
+from app.api import auth, medicines, inventory, suppliers, expiry, alerts, dashboard, forecast, restocking, analytics, portal, export
 from app.config.settings import settings
 from app.database.connection import engine, Base
 import logging
@@ -44,6 +44,11 @@ app.include_router(suppliers.router)
 app.include_router(expiry.router)
 app.include_router(alerts.router)
 app.include_router(dashboard.router)
+app.include_router(forecast.router)
+app.include_router(restocking.router)
+app.include_router(analytics.router)
+app.include_router(portal.router)
+app.include_router(export.router)
 
 
 @app.get("/")
