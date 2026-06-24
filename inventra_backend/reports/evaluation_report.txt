@@ -1,0 +1,46 @@
+
+MODEL EVALUATION REPORT
+=======================
+
+Test Dataset:
+- Samples: 4000
+- Features: 19
+
+Evaluation Metrics (Lower is better for MAE, RMSE, MAPE; Higher is better for R²):
+
+Linear Regression
+- Mean Absolute Error (MAE): 2.4649
+- Root Mean Squared Error (RMSE): 2.8655
+- Mean Absolute Percentage Error (MAPE): 9.5225%
+- R² Score: 0.9680
+
+Decision Tree
+- Mean Absolute Error (MAE): 2.7598
+- Root Mean Squared Error (RMSE): 3.3332
+- Mean Absolute Percentage Error (MAPE): 10.4741%
+- R² Score: 0.9567
+
+Random Forest
+- Mean Absolute Error (MAE): 2.5197
+- Root Mean Squared Error (RMSE): 2.9568
+- Mean Absolute Percentage Error (MAPE): 9.7743%
+- R² Score: 0.9659
+
+XGBoost
+- Mean Absolute Error (MAE): 2.5693
+- Root Mean Squared Error (RMSE): 3.0395
+- Mean Absolute Percentage Error (MAPE): 9.9690%
+- R² Score: 0.9640
+
+Model Ranking (by R² Score):
+1. Linear Regression - R²: 0.9680
+3. Random Forest - R²: 0.9659
+4. XGBoost - R²: 0.9640
+2. Decision Tree - R²: 0.9567
+
+Visualizations Generated:
+- actual_vs_predicted.png: Scatter plot of actual vs predicted values for best model
+- model_comparison.png: Bar charts comparing all models on all metrics
+- feature_importance_*.png: Feature importance plots for tree-based models
+
+All reports saved to: C:\Users\nanma\OneDrive\Desktop\inventra\inventra_backend\reports

@@ -22,14 +22,45 @@ export default function Register() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!fullName || !email || !password || !confirmPassword || !role) {
-      setError('All fields are required.');
+    // Client-side validation
+    if (!fullName || fullName.trim() === '') {
+      setError('Full name is required.');
+      return;
+    }
+    if (fullName.trim().length < 2) {
+      setError('Full name must be at least 2 characters.');
+      return;
+    }
+    if (!email || email.trim() === '') {
+      setError('Email is required.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!password) {
+      setError('Password is required.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    if (!confirmPassword) {
+      setError('Please confirm your password.');
       return;
     }
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
+    if (!role) {
+      setError('Please select a role.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     console.log('Registration attempt:', { fullName, email, role });

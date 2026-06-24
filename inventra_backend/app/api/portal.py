@@ -5,16 +5,20 @@ from datetime import datetime, timedelta
 from app.database.connection import get_db
 from app.models.medicine import Medicine
 from app.models.inventory import Inventory
+from app.models.order import Order, OrderItem
+from app.models.user import User
 from app.schemas.portal import PortalResponse, MedicineAvailability
+from app.schemas.order import OrderResponse
 from typing import List
+from app.auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/portal", tags=["Patient Portal"])
 
 
 @router.get("", response_model=PortalResponse)
-def get_portal_data(db: Session = Depends(get_db)):
+def get_portal_data(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
-    Get data for patient portal including medicine availability.
+    Get data for patient portal including medicine availability and order history.
     """
     medicines = db.query(Medicine).all()
     available_medicines = []
@@ -48,10 +52,13 @@ def get_portal_data(db: Session = Depends(get_db)):
                 available=available
             ))
     
-    # Orders and prescriptions would come from their respective tables
-    # For now, return empty lists as these features are not fully implemented
+    # Get user's orders
+    orders = db.query(Order).filter(Order.user_id == current_user.id).order_by(Order.created_at.desc()).all()
+    
+    # Prescriptions would come from their respective tables
+    # For now, return empty list as this feature is not fully implemented
     return PortalResponse(
         available_medicines=available_medicines,
-        orders=[],
+        orders=orders,
         prescriptions=[]
     )

@@ -1,6 +1,6 @@
 // Smart Restocking page
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { SectionCard, KPICard, Badge, PriorityBadge } from '../components/ui';
 import { api } from '../services/api';
@@ -9,6 +9,12 @@ export function Restock() {
   const [restockData, setRestockData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [selectedReorder, setSelectedReorder] = useState(null);
+  const [reorderQuantity, setReorderQuantity] = useState('');
+  const [reorderNotes, setReorderNotes] = useState('');
+  const [reorderLoading, setReorderLoading] = useState(false);
+  const [reorderStatuses, setReorderStatuses] = useState({});
 
   useEffect(() => {
     api.get('/restocking/recommendations')
@@ -18,6 +24,47 @@ export function Restock() {
   }, []);
 
   const restockItems = restockData?.recommendations || [];
+
+  const handlePlaceOrder = (item) => {
+    setSelectedReorder(item);
+    setReorderQuantity(item.recommended_reorder_qty.toString());
+    setReorderNotes('');
+    setShowReorderModal(true);
+  };
+
+  const handleConfirmReorder = async () => {
+    if (!reorderQuantity || parseInt(reorderQuantity) < 1) {
+      setError('Quantity must be at least 1');
+      return;
+    }
+
+    setReorderLoading(true);
+    setError(null);
+    try {
+      // Create restock request via API
+      await api.post('/restock-requests', {
+        medicine_id: selectedReorder.medicine_id,
+        supplier_id: null, // Will be assigned later
+        requested_quantity: parseInt(reorderQuantity),
+        notes: reorderNotes || null
+      });
+      
+      // Update local status
+      setReorderStatuses(prev => ({
+        ...prev,
+        [selectedReorder.medicine_id]: 'Ordered'
+      }));
+      
+      setShowReorderModal(false);
+      setSelectedReorder(null);
+      setReorderQuantity('');
+      setReorderNotes('');
+    } catch (err) {
+      setError(err.message || 'Failed to place reorder');
+    } finally {
+      setReorderLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -65,6 +112,7 @@ export function Restock() {
                   <th className="table-th">Suggested Order</th>
                   <th className="table-th">Supplier</th>
                   <th className="table-th">Priority</th>
+                  <th className="table-th">Status</th>
                   <th className="table-th">Action</th>
                 </tr>
               </thead>
@@ -80,7 +128,18 @@ export function Restock() {
                     <td className="table-td text-gray-500 dark:text-gray-400">{r.supplier_name}</td>
                     <td className="table-td"><Badge variant={r.priority_level === 'critical' ? 'red' : r.priority_level === 'high' ? 'amber' : 'green'}>{r.priority_level}</Badge></td>
                     <td className="table-td">
-                      <button className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Place Order</button>
+                      <Badge variant={reorderStatuses[r.medicine_id] === 'Ordered' ? 'green' : 'gray'}>
+                        {reorderStatuses[r.medicine_id] || 'Pending'}
+                      </Badge>
+                    </td>
+                    <td className="table-td">
+                      <button 
+                        onClick={() => handlePlaceOrder(r)}
+                        disabled={reorderStatuses[r.medicine_id] === 'Ordered'}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium disabled:opacity-50 disabled:no-underline"
+                      >
+                        {reorderStatuses[r.medicine_id] === 'Ordered' ? 'Ordered' : 'Place Order'}
+                      </button>
                     </td>
                   </motion.tr>
                 ))}
@@ -89,6 +148,72 @@ export function Restock() {
           </div>
         )}
       </SectionCard>
+
+      {showReorderModal && selectedReorder && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }} 
+            animate={{ scale: 1, opacity: 1 }} 
+            className="glass-card p-6 w-full max-w-lg"
+          >
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-5">Reorder Medicine</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Medicine Name</label>
+                <input 
+                  type="text" 
+                  value={selectedReorder.medicine_name} 
+                  disabled 
+                  className="input-field bg-gray-100 dark:bg-gray-700" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Supplier</label>
+                <input 
+                  type="text" 
+                  value={selectedReorder.supplier_name} 
+                  disabled 
+                  className="input-field bg-gray-100 dark:bg-gray-700" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Suggested Quantity</label>
+                <input 
+                  type="number" 
+                  value={reorderQuantity} 
+                  onChange={e => setReorderQuantity(e.target.value)}
+                  className="input-field" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Notes (Optional)</label>
+                <textarea 
+                  rows={3}
+                  value={reorderNotes}
+                  onChange={e => setReorderNotes(e.target.value)}
+                  className="input-field resize-none"
+                  placeholder="Add any special instructions..."
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button 
+                onClick={() => setShowReorderModal(false)} 
+                className="btn-secondary flex-1 justify-center"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleConfirmReorder} 
+                disabled={reorderLoading}
+                className="btn-primary flex-1 justify-center disabled:opacity-50"
+              >
+                {reorderLoading ? 'Placing Order...' : 'Confirm Reorder'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

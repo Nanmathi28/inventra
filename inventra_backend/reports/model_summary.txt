@@ -1,0 +1,24 @@
+
+MODEL SELECTION SUMMARY
+=======================
+
+Best Model Selected: Linear Regression
+R² Score: 0.9680
+
+Justification:
+- Linear Regression achieved the highest R² score among all models
+- R² score of 0.9680 indicates 96.80% of variance in Future_Demand is explained by the model
+- If scores were very close, simpler models would be preferred
+- Linear Regression is the simplest model with excellent performance
+
+Evaluation Metrics for Best Model:
+- MAE: 2.4649
+- RMSE: 2.8655
+- MAPE: 9.5225%
+- R² Score: 0.9680
+
+Features Used (19):
+Category, Manufacturer, Medicine_Form, Price, Current_Stock, Quantity_Sold, Supplier_Name, Supplier_Lead_Time, Days_To_Expiry, Season, Month, Is_Festival, Avg_Last_7_Days_Sales, Avg_Last_30_Days_Sales, Safety_Stock, Reorder_Level, Storage_Requirements, Stock_to_Safety_Ratio, Sales_Velocity
+
+Model File: best_model.pkl
+Location: C:\Users\nanma\OneDrive\Desktop\inventra\inventra_backend\app\ml\saved_models

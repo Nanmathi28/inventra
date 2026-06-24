@@ -12,14 +12,6 @@ class MedicineAvailability(BaseModel):
     available: bool
 
 
-class OrderItem(BaseModel):
-    id: str
-    medicines: str
-    date: str
-    total: str
-    status: str
-
-
 class PrescriptionItem(BaseModel):
     id: str
     doctor: str
@@ -30,5 +22,5 @@ class PrescriptionItem(BaseModel):
 
 class PortalResponse(BaseModel):
     available_medicines: List[MedicineAvailability]
-    orders: List[OrderItem]
+    orders: List  # Will be populated with Order objects from order.py schema
     prescriptions: List[PrescriptionItem]

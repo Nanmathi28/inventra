@@ -4,6 +4,7 @@ import { Save, User, Bell, Shield, Palette, Database, CheckCircle, Camera } from
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { SectionCard } from '../components/ui';
+import { api } from '../services/api';
 
 function Toggle({ checked, onChange, label, desc }) {
   return (
@@ -89,10 +90,15 @@ export default function Settings() {
 
   async function saveProfile() {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 700));
-    updateProfile(profile);
-    setSaving(false);
-    showToast('Profile updated successfully');
+    try {
+      await api.put('/auth/profile', { full_name: profile.name });
+      updateProfile(profile);
+      setSaving(false);
+      showToast('Profile updated successfully');
+    } catch (err) {
+      setSaving(false);
+      showToast('Failed to update profile');
+    }
   }
 
   async function saveThresholds() {

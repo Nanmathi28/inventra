@@ -7,6 +7,7 @@ class SupplierBase(BaseModel):
     phone: str
     email: EmailStr
     address: str | None = None
+    reliability_score: int = 80
 
 
 class SupplierCreate(SupplierBase):
@@ -19,6 +20,7 @@ class SupplierUpdate(BaseModel):
     phone: str | None = None
     email: EmailStr | None = None
     address: str | None = None
+    reliability_score: int | None = None
 
 
 class SupplierResponse(SupplierBase):

@@ -8,6 +8,7 @@ import Landing from './pages/Landing';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/Dashboard';
+import Medicines from './pages/Medicines';
 import Inventory from './pages/Inventory';
 import Forecast from './pages/Forecast';
 import { Restock } from './pages/Restock';
@@ -52,6 +53,7 @@ function AppRoutes() {
       {/* Admin + Pharmacist app */}
       <Route path="/" element={<ProtectedRoute roles={['admin', 'pharmacist']}><Layout /></ProtectedRoute>}>
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="medicines" element={<Medicines />} />
         <Route path="inventory" element={<Inventory />} />
         <Route path="forecast" element={<Forecast />} />
         <Route path="restock" element={<Restock />} />

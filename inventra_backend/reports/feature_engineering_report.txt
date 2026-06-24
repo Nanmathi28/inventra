@@ -1,0 +1,31 @@
+
+FEATURE ENGINEERING REPORT
+==========================
+
+Original Features: 17
+Engineered Features: 2
+Total Features: 19
+
+Original Features:
+Category, Manufacturer, Medicine_Form, Price, Current_Stock, Quantity_Sold, Supplier_Name, Supplier_Lead_Time, Days_To_Expiry, Season, Month, Is_Festival, Avg_Last_7_Days_Sales, Avg_Last_30_Days_Sales, Safety_Stock, Reorder_Level, Storage_Requirements
+
+Engineered Features:
+1. Stock_to_Safety_Ratio: Current_Stock / (Safety_Stock + 1)
+   - Purpose: Indicates inventory buffer level
+   - Higher values mean more safety stock available
+
+2. Sales_Velocity: Avg_Last_7_Days_Sales / (Current_Stock + 1)
+   - Purpose: Indicates how quickly stock is being depleted
+   - Higher values indicate faster depletion
+
+Features Dropped: None
+Reasoning: All original features are relevant for demand prediction.
+The dataset already contains well-engineered features including:
+- Historical sales averages (7-day, 30-day)
+- Temporal features (Season, Month, Is_Festival)
+- Inventory metrics (Current_Stock, Safety_Stock, Reorder_Level)
+- Supply chain metrics (Supplier_Lead_Time)
+- Product attributes (Price, Category, Manufacturer)
+
+Additional transformations were kept minimal to avoid overfitting
+and maintain model interpretability.

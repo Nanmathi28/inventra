@@ -34,18 +34,6 @@ export default function Reports() {
   const totalMedicines = categoryDemand.reduce((sum, c) => sum + c.count, 0);
   const criticalStock = inventoryHealth.find(i => i.name.toLowerCase().includes('critical'))?.value || 0;
 
-  const handleExportCSV = () => {
-    window.open('http://127.0.0.1:8000/export/inventory/csv', '_blank');
-  };
-
-  const handleExportMedicinesCSV = () => {
-    window.open('http://127.0.0.1:8000/export/medicines/csv', '_blank');
-  };
-
-  const handleExportSuppliersCSV = () => {
-    window.open('http://127.0.0.1:8000/export/suppliers/csv', '_blank');
-  };
-
   const handlePrint = () => {
     window.print();
   };
@@ -75,9 +63,6 @@ export default function Reports() {
         </div>
         <div className="flex gap-2">
           <button onClick={handlePrint} className="btn-secondary"><Printer size={14} />Print</button>
-          <button onClick={handleExportCSV} className="btn-secondary"><Download size={14} />Inventory CSV</button>
-          <button onClick={handleExportMedicinesCSV} className="btn-secondary"><Download size={14} />Medicines CSV</button>
-          <button onClick={handleExportSuppliersCSV} className="btn-secondary"><Download size={14} />Suppliers CSV</button>
         </div>
       </div>
 

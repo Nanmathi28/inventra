@@ -15,9 +15,14 @@ export default function Inventory() {
   const [status, setStatus] = useState('All');
   const [page, setPage] = useState(1);
   const [showAdd, setShowAdd] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editInventory, setEditInventory] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const perPage = 8;
+  const [newInventory, setNewInventory] = useState({ medicine_id: '', current_stock: '', reorder_level: '', safety_stock: '', batch_number: '', expiry_date: '' });
+  const [addLoading, setAddLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -37,9 +42,8 @@ export default function Inventory() {
         ...item,
         medicine_name: medicine?.medicine_name || `Medicine #${item.medicine_id}`,
         category: medicine?.category || 'Unknown',
-        batch: medicine?.batch_number || 'N/A',
-        expiry: medicine?.expiry_date ? new Date(medicine.expiry_date).toLocaleDateString() : 'N/A',
-        supplier: medicine?.manufacturer || 'N/A',
+        batch: item.batch_number || 'N/A',
+        expiry: item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : 'N/A',
       };
     }),
     [inventory, medicines]
@@ -60,6 +64,114 @@ export default function Inventory() {
 
   const lowCriticalCount = items.filter(m => m.stock_status !== 'GREEN').length;
 
+  const handleAddInventory = async () => {
+    // Client-side validation
+    if (!newInventory.medicine_id) {
+      setError('Please select a medicine');
+      return;
+    }
+    if (!newInventory.current_stock || newInventory.current_stock < 0) {
+      setError('Current stock must be a positive number');
+      return;
+    }
+    if (!newInventory.reorder_level || newInventory.reorder_level < 0) {
+      setError('Reorder level must be a positive number');
+      return;
+    }
+    if (!newInventory.safety_stock || newInventory.safety_stock < 0) {
+      setError('Safety stock must be a positive number');
+      return;
+    }
+
+    setAddLoading(true);
+    setError(null);
+    try {
+      const payload = {
+        medicine_id: parseInt(newInventory.medicine_id),
+        current_stock: parseInt(newInventory.current_stock),
+        reorder_level: parseInt(newInventory.reorder_level),
+        safety_stock: parseInt(newInventory.safety_stock)
+      };
+      if (newInventory.batch_number) payload.batch_number = newInventory.batch_number;
+      if (newInventory.expiry_date) payload.expiry_date = newInventory.expiry_date;
+      
+      await api.post('/inventory', payload);
+      setShowAdd(false);
+      setNewInventory({ medicine_id: '', current_stock: '', reorder_level: '', safety_stock: '', batch_number: '', expiry_date: '' });
+      // Refresh data
+      const [inventoryData, medicinesData] = await Promise.all([api.get('/inventory'), api.get('/medicines')]);
+      setInventory(inventoryData);
+      setMedicines(medicinesData);
+    } catch (err) {
+      setError(err.message || 'Failed to add inventory');
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  const handleEditInventory = async () => {
+    // Client-side validation
+    if (!editInventory.current_stock || editInventory.current_stock < 0) {
+      setError('Current stock must be a positive number');
+      return;
+    }
+    if (!editInventory.reorder_level || editInventory.reorder_level < 0) {
+      setError('Reorder level must be a positive number');
+      return;
+    }
+    if (!editInventory.safety_stock || editInventory.safety_stock < 0) {
+      setError('Safety stock must be a positive number');
+      return;
+    }
+
+    setEditLoading(true);
+    setError(null);
+    try {
+      const payload = {
+        current_stock: parseInt(editInventory.current_stock),
+        reorder_level: parseInt(editInventory.reorder_level),
+        safety_stock: parseInt(editInventory.safety_stock)
+      };
+      if (editInventory.batch_number) payload.batch_number = editInventory.batch_number;
+      if (editInventory.expiry_date) payload.expiry_date = editInventory.expiry_date;
+      
+      await api.put(`/inventory/${editInventory.id}`, payload);
+      setShowEdit(false);
+      setEditInventory(null);
+      // Refresh data
+      const [inventoryData, medicinesData] = await Promise.all([api.get('/inventory'), api.get('/medicines')]);
+      setInventory(inventoryData);
+      setMedicines(medicinesData);
+    } catch (err) {
+      setError(err.message || 'Failed to update inventory');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDeleteInventory = async (id) => {
+    if (!confirm('Are you sure you want to delete this inventory record?')) return;
+    try {
+      await api.delete(`/inventory/${id}`);
+      setInventory(prev => prev.filter(item => item.id !== id));
+    } catch (err) {
+      setError(err.message || 'Failed to delete inventory');
+    }
+  };
+
+  const openEditModal = (item) => {
+    setEditInventory({
+      id: item.id,
+      medicine_id: item.medicine_id,
+      current_stock: item.current_stock,
+      reorder_level: item.reorder_level,
+      safety_stock: item.safety_stock,
+      batch_number: item.batch_number || '',
+      expiry_date: item.expiry_date ? item.expiry_date.split('T')[0] : ''
+    });
+    setShowEdit(true);
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -69,8 +181,7 @@ export default function Inventory() {
           {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
         </div>
         <div className="flex gap-2">
-          <button className="btn-secondary hidden sm:flex"><Download size={14} />Export</button>
-          <button onClick={() => setShowAdd(true)} className="btn-primary"><Plus size={14} />Add Medicine</button>
+          <button onClick={() => setShowAdd(true)} className="btn-primary"><Plus size={14} />Add Inventory</button>
         </div>
       </div>
 
@@ -109,6 +220,11 @@ export default function Inventory() {
 
         {loading ? (
           <div className="text-center py-10 text-gray-500">Loading inventory from backend…</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <p className="text-lg font-medium">No Inventory Records</p>
+            <p className="text-sm mt-1">Add inventory records for your medicines</p>
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto -mx-5">
@@ -145,10 +261,10 @@ export default function Inventory() {
                       <td className="table-td text-gray-500">{m.updated_at ? new Date(m.updated_at).toLocaleDateString() : '—'}</td>
                       <td className="table-td">
                         <div className="flex gap-1.5">
-                          <button className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                          <button onClick={() => openEditModal(m)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
                             <Edit2 size={13} />
                           </button>
-                          <button className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                          <button onClick={() => handleDeleteInventory(m.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -180,18 +296,112 @@ export default function Inventory() {
       {showAdd && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card p-6 w-full max-w-lg">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-5">Add New Medicine</h2>
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-5">Add Inventory Record</h2>
             <div className="grid grid-cols-2 gap-3">
-              {['Medicine Name', 'Category', 'Batch Number', 'Supplier', 'Current Stock', 'Reorder Level', 'Expiry Date', 'Unit Price (₹)'].map(f => (
-                <div key={f} className={f === 'Medicine Name' ? 'col-span-2' : ''}>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{f}</label>
-                  <input type={f.includes('Date') ? 'date' : f.includes('Stock') || f.includes('Level') || f.includes('Price') ? 'number' : 'text'} className="input-field" />
-                </div>
-              ))}
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Medicine</label>
+                <select
+                  value={newInventory.medicine_id}
+                  onChange={e => setNewInventory(p => ({ ...p, medicine_id: e.target.value }))}
+                  className="input-field"
+                >
+                  <option value="">Select Medicine</option>
+                  {medicines.map(m => <option key={m.id} value={m.id}>{m.medicine_name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Current Stock</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newInventory.current_stock}
+                  onChange={e => setNewInventory(p => ({ ...p, current_stock: e.target.value }))}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Reorder Level</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newInventory.reorder_level}
+                  onChange={e => setNewInventory(p => ({ ...p, reorder_level: e.target.value }))}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Safety Stock</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newInventory.safety_stock}
+                  onChange={e => setNewInventory(p => ({ ...p, safety_stock: e.target.value }))}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Batch Number</label>
+                <input
+                  type="text"
+                  value={newInventory.batch_number || ''}
+                  onChange={e => setNewInventory(p => ({ ...p, batch_number: e.target.value }))}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Expiry Date</label>
+                <input
+                  type="date"
+                  value={newInventory.expiry_date || ''}
+                  onChange={e => setNewInventory(p => ({ ...p, expiry_date: e.target.value }))}
+                  className="input-field"
+                />
+              </div>
             </div>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setShowAdd(false)} className="btn-secondary flex-1 justify-center">Cancel</button>
-              <button onClick={() => setShowAdd(false)} className="btn-primary flex-1 justify-center">Add Medicine</button>
+              <button onClick={handleAddInventory} disabled={addLoading} className="btn-primary flex-1 justify-center disabled:opacity-50">{addLoading ? 'Saving...' : 'Save'}</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {showEdit && editInventory && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card p-6 w-full max-w-lg">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-5">Edit Inventory Record</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Medicine</label>
+                <select value={editInventory.medicine_id} disabled className="input-field bg-gray-100 dark:bg-gray-700">
+                  <option value="">Select Medicine</option>
+                  {medicines.map(m => <option key={m.id} value={m.id}>{m.medicine_name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Current Stock</label>
+                <input type="number" value={editInventory.current_stock} onChange={e => setEditInventory(p => ({ ...p, current_stock: e.target.value }))} className="input-field" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Reorder Level</label>
+                <input type="number" value={editInventory.reorder_level} onChange={e => setEditInventory(p => ({ ...p, reorder_level: e.target.value }))} className="input-field" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Safety Stock</label>
+                <input type="number" value={editInventory.safety_stock} onChange={e => setEditInventory(p => ({ ...p, safety_stock: e.target.value }))} className="input-field" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Batch Number</label>
+                <input type="text" value={editInventory.batch_number} onChange={e => setEditInventory(p => ({ ...p, batch_number: e.target.value }))} className="input-field" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Expiry Date</label>
+                <input type="date" value={editInventory.expiry_date} onChange={e => setEditInventory(p => ({ ...p, expiry_date: e.target.value }))} className="input-field" />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowEdit(false)} className="btn-secondary flex-1 justify-center">Cancel</button>
+              <button onClick={handleEditInventory} disabled={editLoading} className="btn-primary flex-1 justify-center disabled:opacity-50">{editLoading ? 'Updating...' : 'Update Inventory'}</button>
             </div>
           </motion.div>
         </div>

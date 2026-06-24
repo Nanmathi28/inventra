@@ -1,0 +1,5 @@
+Model,Train_R2,Test_R2,Model_File
+Linear Regression,0.9680913757643587,0.9679686786523936,linear_regression.pkl
+Decision Tree,0.9764212337339465,0.9566589116504475,decision_tree.pkl
+Random Forest,0.9933601126286142,0.9658941443280333,random_forest.pkl
+XGBoost,0.9960229992866516,0.9639601707458496,xgboost.pkl

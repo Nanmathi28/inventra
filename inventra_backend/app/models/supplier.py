@@ -11,3 +11,4 @@ class Supplier(Base):
     phone = Column(String, nullable=False)
     email = Column(String, nullable=False)
     address = Column(Text, nullable=True)
+    reliability_score = Column(Integer, nullable=False, server_default='80')

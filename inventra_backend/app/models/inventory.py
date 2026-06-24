@@ -20,6 +20,8 @@ class Inventory(Base):
     reorder_level = Column(Integer, default=10, nullable=False)
     safety_stock = Column(Integer, default=5, nullable=False)
     stock_status = Column(String, default=StockStatus.GREEN, nullable=False)
+    batch_number = Column(String, nullable=True)
+    expiry_date = Column(DateTime, nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     medicine = relationship("Medicine", backref="inventory")

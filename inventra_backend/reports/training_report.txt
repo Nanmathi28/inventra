@@ -1,0 +1,39 @@
+
+MODEL TRAINING REPORT
+=====================
+
+Dataset Information:
+- Training Samples: 16000
+- Test Samples: 4000
+- Features: 19
+- Target Variable: Future_Demand
+
+Models Trained:
+
+Linear Regression
+- Training R² Score: 0.9681
+- Test R² Score: 0.9680
+- Model File: linear_regression.pkl
+
+Decision Tree
+- Training R² Score: 0.9764
+- Test R² Score: 0.9567
+- Model File: decision_tree.pkl
+
+Random Forest
+- Training R² Score: 0.9934
+- Test R² Score: 0.9659
+- Model File: random_forest.pkl
+
+XGBoost
+- Training R² Score: 0.9960
+- Test R² Score: 0.9640
+- Model File: xgboost.pkl
+
+Model Hyperparameters:
+- Linear Regression: Default parameters
+- Decision Tree: max_depth=10, random_state=42
+- Random Forest: n_estimators=100, max_depth=15, random_state=42
+- XGBoost: n_estimators=100, max_depth=10, learning_rate=0.1, random_state=42
+
+All models saved to: C:\Users\nanma\OneDrive\Desktop\inventra\inventra_backend\app\ml\saved_models

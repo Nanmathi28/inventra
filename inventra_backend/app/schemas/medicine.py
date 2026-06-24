@@ -6,8 +6,8 @@ class MedicineBase(BaseModel):
     medicine_name: str
     category: str
     manufacturer: str
-    batch_number: str
-    expiry_date: datetime
+    medicine_form: str | None = None
+    price: float | None = None
     description: str | None = None
 
 
@@ -19,8 +19,8 @@ class MedicineUpdate(BaseModel):
     medicine_name: str | None = None
     category: str | None = None
     manufacturer: str | None = None
-    batch_number: str | None = None
-    expiry_date: datetime | None = None
+    medicine_form: str | None = None
+    price: float | None = None
     description: str | None = None
 
 

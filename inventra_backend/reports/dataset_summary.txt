@@ -1,0 +1,11 @@
+============================================================
+DATASET SUMMARY
+============================================================
+
+Total Rows: 20000
+Total Columns: 31
+Columns: ['Date', 'Medicine_ID', 'Medicine_Name', 'Category', 'Manufacturer', 'Medicine_Form', 'Price', 'Current_Stock', 'Quantity_Sold', 'Supplier_Name', 'Supplier_Lead_Time', 'Batch_Number', 'Manufacturing_Date', 'Expiry_Date', 'Days_To_Expiry', 'Season', 'Month', 'Is_Festival', 'Avg_Last_7_Days_Sales', 'Avg_Last_30_Days_Sales', 'Safety_Stock', 'Reorder_Level', 'Future_Demand', 'Stock_Status', 'Expiry_Risk', 'Reorder_Required', 'Recommended_Reorder_Qty', 'Demand_Level', 'Stock_Cover_Days', 'Criticality_Level', 'Storage_Requirements']
+Memory Usage (MB): 21.929080963134766
+Numeric Columns: ['Medicine_ID', 'Price', 'Current_Stock', 'Quantity_Sold', 'Supplier_Lead_Time', 'Days_To_Expiry', 'Month', 'Is_Festival', 'Avg_Last_7_Days_Sales', 'Avg_Last_30_Days_Sales', 'Safety_Stock', 'Reorder_Level', 'Future_Demand', 'Recommended_Reorder_Qty', 'Stock_Cover_Days']
+Categorical Columns: ['Date', 'Medicine_Name', 'Category', 'Manufacturer', 'Medicine_Form', 'Supplier_Name', 'Batch_Number', 'Manufacturing_Date', 'Expiry_Date', 'Season', 'Stock_Status', 'Expiry_Risk', 'Reorder_Required', 'Demand_Level', 'Criticality_Level', 'Storage_Requirements']
+Date Columns: []

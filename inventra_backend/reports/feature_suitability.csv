@@ -1,0 +1,31 @@
+Feature,Data Type,Missing %,Unique Values,Suitability,Reason
+Date,object,0.0,200,Very Low,Categorical feature with very high cardinality
+Medicine_ID,int64,0.0,100,High,Numeric feature with low missing values
+Medicine_Name,object,0.0,100,Very Low,Categorical feature with very high cardinality
+Category,object,0.0,8,Medium,Categorical feature with low cardinality
+Manufacturer,object,0.0,6,Medium,Categorical feature with low cardinality
+Medicine_Form,object,0.0,4,Medium,Categorical feature with low cardinality
+Price,float64,0.0,99,High,Numeric feature with low missing values
+Current_Stock,int64,0.0,470,High,Numeric feature with low missing values
+Quantity_Sold,int64,0.0,55,High,Numeric feature with low missing values
+Supplier_Name,object,0.0,5,Medium,Categorical feature with low cardinality
+Supplier_Lead_Time,int64,0.0,13,High,Numeric feature with low missing values
+Batch_Number,object,0.0,20000,Very Low,Categorical feature with very high cardinality
+Manufacturing_Date,object,0.0,530,Very Low,Categorical feature with very high cardinality
+Expiry_Date,object,0.0,1135,Very Low,Categorical feature with very high cardinality
+Days_To_Expiry,int64,0.0,1035,High,Numeric feature with low missing values
+Season,object,0.0,3,Medium,Categorical feature with low cardinality
+Month,int64,0.0,7,High,Numeric feature with low missing values
+Is_Festival,int64,0.0,2,High,Numeric feature with low missing values
+Avg_Last_7_Days_Sales,int64,0.0,64,High,Numeric feature with low missing values
+Avg_Last_30_Days_Sales,int64,0.0,69,High,Numeric feature with low missing values
+Safety_Stock,int64,0.0,60,High,Numeric feature with low missing values
+Reorder_Level,int64,0.0,70,High,Numeric feature with low missing values
+Stock_Status,object,0.0,3,Medium,Categorical feature with low cardinality
+Expiry_Risk,object,0.0,3,Medium,Categorical feature with low cardinality
+Reorder_Required,object,0.0,2,Medium,Categorical feature with low cardinality
+Recommended_Reorder_Qty,int64,0.0,101,High,Numeric feature with low missing values
+Demand_Level,object,0.0,3,Medium,Categorical feature with low cardinality
+Stock_Cover_Days,float64,0.0,3382,High,Numeric feature with low missing values
+Criticality_Level,object,0.0,3,Medium,Categorical feature with low cardinality
+Storage_Requirements,object,0.0,3,Medium,Categorical feature with low cardinality

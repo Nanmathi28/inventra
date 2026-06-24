@@ -102,3 +102,23 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def get_profile(current_user: User = Depends(get_current_user)):
     logger.info(f"Profile request for user: {current_user.email}")
     return current_user
+
+
+@router.put("/profile", response_model=UserResponse)
+def update_profile(
+    full_name: str = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update user profile (currently supports full_name only).
+    """
+    logger.info(f"Profile update request for user: {current_user.email}")
+    
+    if full_name:
+        current_user.full_name = full_name
+        db.commit()
+        db.refresh(current_user)
+        logger.info(f"Profile updated successfully for user: {current_user.email}")
+    
+    return current_user

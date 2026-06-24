@@ -8,6 +8,8 @@ class InventoryBase(BaseModel):
     current_stock: int = 0
     reorder_level: int = 10
     safety_stock: int = 5
+    batch_number: str | None = None
+    expiry_date: datetime | None = None
 
 
 class InventoryCreate(InventoryBase):
@@ -18,6 +20,8 @@ class InventoryUpdate(BaseModel):
     current_stock: int | None = None
     reorder_level: int | None = None
     safety_stock: int | None = None
+    batch_number: str | None = None
+    expiry_date: datetime | None = None
 
 
 class InventoryResponse(BaseModel):
@@ -27,6 +31,8 @@ class InventoryResponse(BaseModel):
     reorder_level: int
     safety_stock: int
     stock_status: StockStatus
+    batch_number: str | None = None
+    expiry_date: datetime | None = None
     updated_at: datetime
     
     class Config:

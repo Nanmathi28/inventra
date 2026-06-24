@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text, Float
 from sqlalchemy.sql import func
 from app.database.connection import Base
 
@@ -10,7 +10,7 @@ class Medicine(Base):
     medicine_name = Column(String, nullable=False)
     category = Column(String, nullable=False)
     manufacturer = Column(String, nullable=False)
-    batch_number = Column(String, nullable=False)
-    expiry_date = Column(DateTime, nullable=False)
+    medicine_form = Column(String, nullable=True)
+    price = Column(Float, nullable=True)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

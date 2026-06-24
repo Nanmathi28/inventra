@@ -1,0 +1,22 @@
+
+PREPROCESSING REPORT
+====================
+
+Original Dataset Shape: (20000, 31)
+Missing Values Before: 0
+Missing Values After: 0
+Duplicates Removed: 0
+
+Features Selected: 17
+Target Variable: Future_Demand
+
+Categorical Features Encoded: 6
+Numeric Features: 11
+
+Train/Test Split:
+- Training Samples: 16000
+- Test Samples: 4000
+- Test Ratio: 20%
+
+Feature Columns:
+Category, Manufacturer, Medicine_Form, Price, Current_Stock, Quantity_Sold, Supplier_Name, Supplier_Lead_Time, Days_To_Expiry, Season, Month, Is_Festival, Avg_Last_7_Days_Sales, Avg_Last_30_Days_Sales, Safety_Stock, Reorder_Level, Storage_Requirements

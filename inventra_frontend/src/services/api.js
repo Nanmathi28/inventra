@@ -4,7 +4,7 @@ function getToken() {
   return localStorage.getItem('inventra_token');
 }
 
-async function parseResponse(response) {
+async function parseResponse(response, requestUrl, requestPayload) {
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
   if (!response.ok) {
@@ -12,10 +12,20 @@ async function parseResponse(response) {
     const error = new Error(message);
     error.status = response.status;
     error.data = data;
-    console.error('API Error:', { status: response.status, message, data });
+    console.error('API Error:', {
+      url: requestUrl,
+      status: response.status,
+      message,
+      requestPayload,
+      responseData: data
+    });
     throw error;
   }
-  console.log('API Success:', data);
+  console.log('API Success:', {
+    url: requestUrl,
+    status: response.status,
+    response: data
+  });
   return data;
 }
 
@@ -32,6 +42,7 @@ function createHeaders(custom = {}) {
 }
 
 async function request(path, { method = 'GET', body, headers = {} } = {}) {
+  const url = `${API_BASE_URL}${path}`;
   const init = {
     method,
     headers: createHeaders(headers),
@@ -49,24 +60,32 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
     }
   }
 
-  console.log(`API Request: ${method} ${API_BASE_URL}${path}`, body);
-  const response = await fetch(`${API_BASE_URL}${path}`, init);
-  return parseResponse(response);
+  console.log('API Request:', {
+    method,
+    url,
+    payload: body
+  });
+  const response = await fetch(url, init);
+  return parseResponse(response, url, body);
 }
 
 export async function loginRequest(email, password) {
+  const url = `${API_BASE_URL}/auth/login`;
   const body = new URLSearchParams({ username: email, password });
-  console.log(`Login Request: ${API_BASE_URL}/auth/login`, { email });
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  console.log('API Request:', {
+    method: 'POST',
+    url,
+    payload: { email }
+  });
+  const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
   });
-  return parseResponse(response);
+  return parseResponse(response, url, { email });
 }
 
 export async function registerRequest(payload) {
-  console.log(`Register Request: ${API_BASE_URL}/auth/register`, payload);
   return request('/auth/register', { method: 'POST', body: payload });
 }
 
@@ -74,5 +93,6 @@ export const api = {
   get: path => request(path, { method: 'GET' }),
   post: (path, body) => request(path, { method: 'POST', body }),
   put: (path, body) => request(path, { method: 'PUT', body }),
+  delete: path => request(path, { method: 'DELETE' }),
   del: path => request(path, { method: 'DELETE' }),
 };

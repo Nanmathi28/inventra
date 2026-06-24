@@ -23,6 +23,14 @@ export default function CustomerPortal() {
   const [portalData, setPortalData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [selectedMedicine, setSelectedMedicine] = useState(null);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     api.get('/portal')
@@ -34,6 +42,77 @@ export default function CustomerPortal() {
   const availabilityData = portalData?.available_medicines || [];
   const orders = portalData?.orders || [];
   const prescriptions = portalData?.prescriptions || [];
+
+  const handleOrderRequest = (medicine) => {
+    setSelectedMedicine(medicine);
+    setOrderQuantity(1);
+    setOrderModalOpen(true);
+    setOrderSuccess(false);
+  };
+
+  const submitOrder = async () => {
+    // Client-side validation
+    if (!orderQuantity || orderQuantity < 1) {
+      setError('Quantity must be at least 1');
+      return;
+    }
+    if (selectedMedicine && orderQuantity > selectedMedicine.stock) {
+      setError(`Only ${selectedMedicine.stock} units available`);
+      return;
+    }
+
+    setOrderLoading(true);
+    setError(null);
+    try {
+      // Get medicine price from database
+      const medicines = await api.get('/medicines');
+      const medicine = medicines.find(m => m.id === selectedMedicine.medicine_id);
+      const price = medicine?.price || 0;
+      
+      await api.post('/orders', {
+        items: [{
+          medicine_id: selectedMedicine.medicine_id,
+          quantity: orderQuantity,
+          price: price
+        }]
+      });
+      setOrderSuccess(true);
+      setTimeout(() => {
+        setOrderModalOpen(false);
+        // Refresh portal data
+        api.get('/portal').then(data => setPortalData(data));
+      }, 1500);
+    } catch (err) {
+      setError(err.message || 'Failed to place order');
+    } finally {
+      setOrderLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    // Client-side validation
+    if (!profileName || profileName.trim() === '') {
+      setError('Name is required');
+      return;
+    }
+    if (profileName.trim().length < 2) {
+      setError('Name must be at least 2 characters');
+      return;
+    }
+
+    setProfileLoading(true);
+    setError(null);
+    try {
+      await api.put('/auth/profile', { full_name: profileName });
+      // Update user context
+      user.name = profileName;
+      setProfileModalOpen(false);
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   const filtered = availabilityData.filter(m => 
     m.medicine_name.toLowerCase().includes(search.toLowerCase())
@@ -73,10 +152,10 @@ export default function CustomerPortal() {
             <button onClick={toggle} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <div className="flex items-center gap-2 text-sm">
+            <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors">
               <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${user?.avatarColor || 'from-purple-500 to-purple-700'} flex items-center justify-center text-white text-xs font-bold`}>{user?.avatar}</div>
               <span className="hidden sm:block text-gray-700 dark:text-gray-300 font-medium">{user?.name}</span>
-            </div>
+            </button>
             <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors">
               <LogOut size={15} />
             </button>
@@ -166,7 +245,7 @@ export default function CustomerPortal() {
                       <p className="text-[10px] text-gray-400 capitalize mt-0.5">{m.status}</p>
                     </div>
                     {m.available && (
-                      <button className="ml-2 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-semibold transition-colors">
+                      <button onClick={() => handleOrderRequest(m)} className="ml-2 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-semibold transition-colors">
                         Request
                       </button>
                     )}
@@ -185,19 +264,19 @@ export default function CustomerPortal() {
               </div>
             ) : (
               orders.map((o, i) => (
-                <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 dark:border-gray-700/40 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                  <div className="w-9 h-9 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle size={16} className="text-green-500" />
+                <div key={o.id} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 dark:border-gray-700/40 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${o.status === 'delivered' ? 'bg-green-50 dark:bg-green-900/20' : o.status === 'pending' ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
+                    {o.status === 'delivered' ? <CheckCircle size={16} className="text-green-500" /> : o.status === 'pending' ? <Clock size={16} className="text-amber-500" /> : <Package size={16} className="text-blue-500" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{o.id}</p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">{o.medicines}</p>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{o.order_number}</p>
+                    <p className="text-xs text-gray-400 truncate mt-0.5">{o.order_items?.length || 0} items</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{o.total}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{o.date}</p>
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">${o.total_amount?.toFixed(2) || '0.00'}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{new Date(o.created_at).toLocaleDateString()}</p>
                   </div>
-                  <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-semibold capitalize">{o.status}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold capitalize ${o.status === 'delivered' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : o.status === 'pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>{o.status}</span>
                 </div>
               ))
             )}
@@ -235,6 +314,63 @@ export default function CustomerPortal() {
           </motion.div>
         )}
       </div>
+
+      {/* Order Modal */}
+      {orderModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Place Order</h3>
+            {orderSuccess ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle size={32} className="text-green-500" />
+                </div>
+                <p className="text-green-600 dark:text-green-400 font-semibold">Order placed successfully!</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Medicine</p>
+                  <p className="font-semibold text-gray-800 dark:text-white">{selectedMedicine?.medicine_name}</p>
+                </div>
+                <div className="mb-4">
+                  <label className="text-sm text-gray-600 dark:text-gray-400 block mb-2">Quantity</label>
+                  <input type="number" min="1" max={selectedMedicine?.stock || 1} value={orderQuantity} onChange={e => setOrderQuantity(Math.min(Math.max(1, parseInt(e.target.value) || 1), selectedMedicine?.stock || 1))} className="w-full px-4 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-gray-800 dark:text-gray-100" />
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => setOrderModalOpen(false)} className="flex-1 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    Cancel
+                  </button>
+                  <button onClick={submitOrder} disabled={orderLoading} className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50">
+                    {orderLoading ? 'Placing...' : 'Confirm Order'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {profileModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Update Profile</h3>
+            <div className="mb-4">
+              <label className="text-sm text-gray-600 dark:text-gray-400 block mb-2">Full Name</label>
+              <input type="text" value={profileName} onChange={e => setProfileName(e.target.value)} className="w-full px-4 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-gray-800 dark:text-gray-100" />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setProfileModalOpen(false)} className="flex-1 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleProfileUpdate} disabled={profileLoading} className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50">
+                {profileLoading ? 'Updating...' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

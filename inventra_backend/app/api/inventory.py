@@ -42,6 +42,27 @@ def create_inventory(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # Check if inventory record already exists for this medicine
+    existing_inventory = db.query(Inventory).filter(Inventory.medicine_id == inventory.medicine_id).first()
+    
+    if existing_inventory:
+        # Update existing inventory record instead of creating duplicate
+        stock_status = calculate_stock_status(
+            inventory.current_stock,
+            inventory.reorder_level,
+            inventory.safety_stock
+        )
+        
+        existing_inventory.current_stock = inventory.current_stock
+        existing_inventory.reorder_level = inventory.reorder_level
+        existing_inventory.safety_stock = inventory.safety_stock
+        existing_inventory.stock_status = stock_status
+        
+        db.commit()
+        db.refresh(existing_inventory)
+        return existing_inventory
+    
+    # Create new inventory record if none exists
     stock_status = calculate_stock_status(
         inventory.current_stock,
         inventory.reorder_level,

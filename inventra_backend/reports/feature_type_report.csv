@@ -1,0 +1,32 @@
+Column,Data Type,Unique Values,Sample Values
+Date,object,200,Too many to display
+Medicine_ID,int64,100,Too many to display
+Medicine_Name,object,100,Too many to display
+Category,object,8,"['Pain Relief', 'Pain Relief', 'Pain Relief']"
+Manufacturer,object,6,"['Mankind', 'Mankind', 'Mankind']"
+Medicine_Form,object,4,"['Tablet', 'Tablet', 'Tablet']"
+Price,float64,99,Too many to display
+Current_Stock,int64,470,Too many to display
+Quantity_Sold,int64,55,Too many to display
+Supplier_Name,object,5,"['PharmaLink', 'PharmaLink', 'PharmaLink']"
+Supplier_Lead_Time,int64,13,Too many to display
+Batch_Number,object,20000,Too many to display
+Manufacturing_Date,object,530,Too many to display
+Expiry_Date,object,1135,Too many to display
+Days_To_Expiry,int64,1035,Too many to display
+Season,object,3,"['Winter', 'Winter', 'Winter']"
+Month,int64,7,"[1, 1, 1]"
+Is_Festival,int64,2,"[0, 0, 0]"
+Avg_Last_7_Days_Sales,int64,64,Too many to display
+Avg_Last_30_Days_Sales,int64,69,Too many to display
+Safety_Stock,int64,60,Too many to display
+Reorder_Level,int64,70,Too many to display
+Future_Demand,int64,69,Too many to display
+Stock_Status,object,3,"['Green', 'Green', 'Green']"
+Expiry_Risk,object,3,"['Low', 'Low', 'Low']"
+Reorder_Required,object,2,"['No', 'No', 'No']"
+Recommended_Reorder_Qty,int64,101,Too many to display
+Demand_Level,object,3,"['Medium', 'Medium', 'Medium']"
+Stock_Cover_Days,float64,3382,Too many to display
+Criticality_Level,object,3,"['Medium', 'Medium', 'Low']"
+Storage_Requirements,object,3,"['Room Temperature', 'Room Temperature', 'Room Temperature']"

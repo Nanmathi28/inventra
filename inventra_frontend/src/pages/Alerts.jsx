@@ -46,8 +46,16 @@ export default function Alerts() {
           <p className="text-sm text-gray-500 mt-0.5">{loading ? 'Loading alerts…' : `${unreadCount} unread notifications`}</p>
           {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
         </div>
-        <button onClick={() => setAlerts(prev => prev.map(a => ({ ...a, status: 'resolved' })))} className="btn-secondary">
-          <CheckCircle size={14} /> Mark all read
+        <button onClick={async () => {
+          try {
+            await api.post('/alerts/generate');
+            const data = await api.get('/alerts');
+            setAlerts(data || []);
+          } catch (err) {
+            setError(err.message || 'Failed to generate alerts');
+          }
+        }} className="btn-secondary">
+          <RefreshCw size={14} /> Generate Alerts
         </button>
       </div>
 
@@ -111,7 +119,14 @@ export default function Alerts() {
                   </div>
                   {!isRead && (
                     <button
-                      onClick={() => setAlerts(prev => prev.map(alert => alert.id === a.id ? { ...alert, status: 'resolved' } : alert))}
+                      onClick={async () => {
+                        try {
+                          await api.put(`/alerts/${a.id}`, { status: 'resolved' });
+                          setAlerts(prev => prev.map(alert => alert.id === a.id ? { ...alert, status: 'resolved' } : alert));
+                        } catch (err) {
+                          setError(err.message || 'Failed to update alert');
+                        }
+                      }}
                       className="flex-shrink-0 text-xs text-blue-600 hover:underline self-start"
                     >
                       Mark read

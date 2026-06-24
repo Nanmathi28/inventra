@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 
 const allNavItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'pharmacist'] },
+  { to: '/medicines', label: 'Medicines', icon: Package, roles: ['admin', 'pharmacist'] },
   { to: '/inventory', label: 'Inventory', icon: Package, roles: ['admin', 'pharmacist'] },
   { to: '/forecast', label: 'Demand Forecast', icon: TrendingUp, roles: ['admin', 'pharmacist'] },
   { to: '/restock', label: 'Smart Restocking', icon: RefreshCw, roles: ['admin', 'pharmacist'] },
