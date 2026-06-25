@@ -39,8 +39,7 @@ def get_inventory_item(inventory_id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=InventoryResponse, status_code=status.HTTP_201_CREATED)
 def create_inventory(
     inventory: InventoryCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     # Check if inventory record already exists for this medicine
     existing_inventory = db.query(Inventory).filter(Inventory.medicine_id == inventory.medicine_id).first()
@@ -86,8 +85,7 @@ def create_inventory(
 def update_inventory(
     inventory_id: int,
     inventory: InventoryUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     db_inventory = db.query(Inventory).filter(Inventory.id == inventory_id).first()
     if not db_inventory:
@@ -115,8 +113,7 @@ def update_inventory(
 @router.delete("/{inventory_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_inventory(
     inventory_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     db_inventory = db.query(Inventory).filter(Inventory.id == inventory_id).first()
     if not db_inventory:

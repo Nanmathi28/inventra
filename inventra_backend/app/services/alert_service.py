@@ -52,9 +52,16 @@ class AlertService:
     @staticmethod
     def generate_expiry_alerts(db: Session):
         critical_date = datetime.now() + timedelta(days=30)
-        medicines = db.query(Medicine).filter(Medicine.expiry_date <= critical_date).all()
+        inventories = db.query(Inventory).join(Medicine).filter(
+            Inventory.expiry_date != None,
+            Inventory.expiry_date <= critical_date
+        ).all()
         
-        for medicine in medicines:
+        for inventory in inventories:
+            medicine = inventory.medicine
+            if not medicine:
+                continue
+
             existing_alert = db.query(Alert).filter(
                 Alert.medicine_id == medicine.id,
                 Alert.alert_type == AlertType.NEAR_EXPIRY,
@@ -65,7 +72,7 @@ class AlertService:
                 new_alert = Alert(
                     medicine_id=medicine.id,
                     alert_type=AlertType.NEAR_EXPIRY,
-                    message=f"Medicine {medicine.medicine_name} is near expiry. Expiry date: {medicine.expiry_date}",
+                    message=f"Medicine {medicine.medicine_name} is near expiry. Expiry date: {inventory.expiry_date}",
                     status=AlertStatus.ACTIVE
                 )
                 db.add(new_alert)

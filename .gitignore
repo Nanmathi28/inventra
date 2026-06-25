@@ -7,34 +7,35 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Node
+node_modules/
+dist/
+dist-ssr/
+
+# Environment
+.env
 *.local
 
-# Editor directories and files
+# Editors
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Backend
-inventra_backend/venv/
-inventra_backend/__pycache__/
-inventra_backend/.env
-inventra_backend/**/*.pyc
+Thumbs.db
 
 # Python
-*.pyc
-__pycache__/
+venv/
+inventra_backend/venv/
+_pycache_/
+**/_pycache_/
+*.py[cod]
 
-# Frontend build
+# Backend
+inventra_backend/.env
+
+# Frontend
 inventra_frontend/node_modules/
 inventra_frontend/dist/
 
-venv/
+# Generated reports (optional)
+inventra_backend/reports/

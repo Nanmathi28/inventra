@@ -69,13 +69,14 @@ def export_medicines_csv(db: Session = Depends(get_db)):
     
     # Write data
     for medicine in medicines:
+        inventory = db.query(Inventory).filter(Inventory.medicine_id == medicine.id).first()
         writer.writerow([
             medicine.id,
             medicine.medicine_name,
             medicine.category,
             medicine.manufacturer,
-            medicine.batch_number,
-            medicine.expiry_date.strftime("%Y-%m-%d") if medicine.expiry_date else "",
+            inventory.batch_number if inventory else "",
+            inventory.expiry_date.strftime("%Y-%m-%d") if inventory and inventory.expiry_date else "",
             medicine.description or "",
             medicine.created_at.strftime("%Y-%m-%d %H:%M:%S") if medicine.created_at else ""
         ])

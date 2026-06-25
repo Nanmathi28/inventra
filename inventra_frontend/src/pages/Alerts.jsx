@@ -117,21 +117,37 @@ export default function Alerts() {
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{a.message}</p>
                   </div>
-                  {!isRead && (
+                  <div className="flex gap-2 flex-shrink-0">
+                    {!isRead && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await api.put(`/alerts/${a.id}`, { status: 'resolved' });
+                            setAlerts(prev => prev.map(alert => alert.id === a.id ? { ...alert, status: 'resolved' } : alert));
+                          } catch (err) {
+                            setError(err.message || 'Failed to update alert');
+                          }
+                        }}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Mark read
+                      </button>
+                    )}
                     <button
                       onClick={async () => {
+                        if (!confirm('Are you sure you want to delete this alert?')) return;
                         try {
-                          await api.put(`/alerts/${a.id}`, { status: 'resolved' });
-                          setAlerts(prev => prev.map(alert => alert.id === a.id ? { ...alert, status: 'resolved' } : alert));
+                          await api.delete(`/alerts/${a.id}`);
+                          setAlerts(prev => prev.filter(alert => alert.id !== a.id));
                         } catch (err) {
-                          setError(err.message || 'Failed to update alert');
+                          setError(err.message || 'Failed to delete alert');
                         }
                       }}
-                      className="flex-shrink-0 text-xs text-blue-600 hover:underline self-start"
+                      className="text-xs text-red-600 hover:underline"
                     >
-                      Mark read
+                      Delete
                     </button>
-                  )}
+                  </div>
                 </motion.div>
               );
             })

@@ -19,8 +19,7 @@ def get_suppliers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 @router.post("", response_model=SupplierResponse, status_code=status.HTTP_201_CREATED)
 def create_supplier(
     supplier: SupplierCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     db_supplier = Supplier(**supplier.model_dump())
     db.add(db_supplier)
@@ -33,8 +32,7 @@ def create_supplier(
 def update_supplier(
     supplier_id: int,
     supplier: SupplierUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     db_supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
     if not db_supplier:
@@ -55,8 +53,7 @@ def update_supplier(
 @router.delete("/{supplier_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_supplier(
     supplier_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     db_supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
     if not db_supplier:

@@ -26,20 +26,31 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    Promise.all([
-      api.get('/dashboard/summary'),
-      api.get('/analytics'),
-      api.get('/restocking/recommendations'),
-      api.get('/alerts')
-    ])
-      .then(([summaryData, analyticsData, restockData, alertsData]) => {
-        setSummary(summaryData);
-        setAnalytics(analyticsData);
-        setRestock(restockData);
-        setAlerts(alertsData.slice(0, 5));
-      })
-      .catch(err => setError(err.message || 'Could not load dashboard data'))
-      .finally(() => setLoading(false));
+    const fetchDashboardData = () => {
+      Promise.all([
+        api.get('/dashboard/summary'),
+        api.get('/analytics'),
+        api.get('/restocking/recommendations'),
+        api.get('/alerts')
+      ])
+        .then(([summaryData, analyticsData, restockData, alertsData]) => {
+          setSummary(summaryData);
+          setAnalytics(analyticsData);
+          setRestock(restockData);
+          setAlerts(alertsData.slice(0, 5));
+        })
+        .catch(err => {
+          console.error('Dashboard error:', err);
+          setError(err.message || 'Could not load dashboard data');
+        })
+        .finally(() => setLoading(false));
+    };
+
+    fetchDashboardData();
+
+    // Auto-refresh dashboard every 30 seconds
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const kpis = [

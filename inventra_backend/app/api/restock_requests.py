@@ -21,8 +21,7 @@ def get_restock_requests(skip: int = 0, limit: int = 100, db: Session = Depends(
 @router.post("", response_model=RestockRequestResponse, status_code=status.HTTP_201_CREATED)
 def create_restock_request(
     request_data: RestockRequestCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     # Validate medicine exists
     medicine = db.query(Medicine).filter(Medicine.id == request_data.medicine_id).first()
@@ -52,8 +51,7 @@ def create_restock_request(
 def update_restock_request(
     request_id: int,
     request_update: RestockRequestUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     db_request = db.query(RestockRequest).filter(RestockRequest.id == request_id).first()
     if not db_request:
@@ -74,8 +72,7 @@ def update_restock_request(
 @router.delete("/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_restock_request(
     request_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     db_request = db.query(RestockRequest).filter(RestockRequest.id == request_id).first()
     if not db_request:

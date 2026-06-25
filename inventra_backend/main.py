@@ -26,11 +26,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware configuration
-logger.info(f"CORS Origins: {settings.BACKEND_ORIGINS}")
+# CORS middleware configuration - Allow all origins for development
+logger.info(f"CORS Origins: Allowing all origins for development")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

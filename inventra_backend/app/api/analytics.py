@@ -73,22 +73,22 @@ def get_analytics(db: Session = Depends(get_db)):
     warning_end = now + timedelta(days=60)
     safe_date = now + timedelta(days=90)
     
-    critical_count = db.query(func.count(Medicine.id)).filter(
-        Medicine.expiry_date <= critical_date
+    critical_count = db.query(func.count(Inventory.id)).filter(
+    Inventory.expiry_date <= critical_date
     ).scalar() or 0
     
-    warning_count = db.query(func.count(Medicine.id)).filter(
-        Medicine.expiry_date > critical_date,
-        Medicine.expiry_date <= warning_end
+    warning_count = db.query(func.count(Inventory.id)).filter(
+    Inventory.expiry_date > critical_date,
+    Inventory.expiry_date <= warning_end
     ).scalar() or 0
     
-    moderate_count = db.query(func.count(Medicine.id)).filter(
-        Medicine.expiry_date > warning_end,
-        Medicine.expiry_date <= safe_date
+    moderate_count = db.query(func.count(Inventory.id)).filter(
+    Inventory.expiry_date > warning_end,
+    Inventory.expiry_date <= safe_date
     ).scalar() or 0
     
-    safe_count = db.query(func.count(Medicine.id)).filter(
-        Medicine.expiry_date > safe_date
+    safe_count = db.query(func.count(Inventory.id)).filter(
+    Inventory.expiry_date > safe_date
     ).scalar() or 0
     
     expiry_risk_distribution = [
@@ -98,24 +98,17 @@ def get_analytics(db: Session = Depends(get_db)):
         ExpiryRiskDistribution(range="> 90 days", count=safe_count, color="#22c55e"),
     ]
     
-    # Monthly trends (placeholder - would use actual sales data)
-    monthly_trends = [
-        MonthlyTrend(month="Jan", value=0),
-        MonthlyTrend(month="Feb", value=0),
-        MonthlyTrend(month="Mar", value=0),
-        MonthlyTrend(month="Apr", value=0),
-        MonthlyTrend(month="May", value=0),
-        MonthlyTrend(month="Jun", value=0),
-    ]
+    # Monthly trends (empty - no sales data available)
+    monthly_trends = []
     
-    # Supplier performance
+    # Supplier performance (use actual reliability_score from database)
     suppliers = db.query(Supplier).all()
     supplier_performance = [
         SupplierPerformance(
             supplier_id=supplier.id,
             supplier_name=supplier.supplier_name,
-            reliability=85.0,  # Placeholder - would calculate from actual data
-            medicines_count=0  # Placeholder - would count actual medicines per supplier
+            reliability=float(supplier.reliability_score or 80),
+            medicines_count=0  # No direct relationship between suppliers and medicines in current schema
         )
         for supplier in suppliers
     ]

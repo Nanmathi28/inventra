@@ -12,6 +12,20 @@ class InventoryBase(BaseModel):
     expiry_date: datetime | None = None
 
 
+class ExpiryItemResponse(BaseModel):
+    id: int
+    medicine_id: int
+    medicine_name: str
+    category: str
+    batch_number: str | None = None
+    expiry_date: datetime | None = None
+    stock_status: StockStatus
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class InventoryCreate(InventoryBase):
     pass
 

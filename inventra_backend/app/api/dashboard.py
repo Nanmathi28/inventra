@@ -26,8 +26,8 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     ).scalar()
     
     critical_date = datetime.now() + timedelta(days=30)
-    near_expiry_items = db.query(func.count(Medicine.id)).filter(
-        Medicine.expiry_date <= critical_date
+    near_expiry_items = db.query(func.count(Inventory.id)).filter(
+    Inventory.expiry_date <= critical_date
     ).scalar()
     
     total_suppliers = db.query(func.count(Supplier.id)).scalar()

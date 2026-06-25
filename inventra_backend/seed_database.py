@@ -110,20 +110,13 @@ def seed_medicines(db: Session, df: pd.DataFrame):
             medicines_skipped += 1
             continue
         
-        # Get first available batch and expiry for this medicine
-        medicine_data = df[df['Medicine_Name'] == medicine_name].iloc[0]
-        batch_number = medicine_data['Batch_Number']
-        expiry_date = pd.to_datetime(medicine_data['Expiry_Date'])
-        
-        # Create medicine
+        # Create medicine (batch_number and expiry_date moved to inventory)
         medicine = Medicine(
             medicine_name=medicine_name,
             category=row['Category'],
             manufacturer=row['Manufacturer'],
             medicine_form=row['Medicine_Form'],
             price=float(row['Price']),
-            batch_number=batch_number,
-            expiry_date=expiry_date,
             description=f"{row['Category']} medicine manufactured by {row['Manufacturer']}"
         )
         
