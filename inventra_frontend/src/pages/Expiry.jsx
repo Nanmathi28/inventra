@@ -31,6 +31,38 @@ export default function Expiry() {
       .catch(err => setError(err.message || 'Could not load expiry data'))
       .finally(() => setLoading(false));
   }, []);
+  const markForDiscount = async (medicineId) => {
+    try {
+      await api.put(`/inventory/${medicineId}/discount`);
+
+      setCriticalMedicines(prev =>
+        prev.map(item =>
+          item.id === medicineId
+            ? { ...item, discount_applied: true }
+            : item
+        )
+      );
+
+      setWarningMedicines(prev =>
+        prev.map(item =>
+          item.id === medicineId
+            ? { ...item, discount_applied: true }
+            : item
+        )
+      );
+
+      setSafeMedicines(prev =>
+        prev.map(item =>
+          item.id === medicineId
+            ? { ...item, discount_applied: true }
+            : item
+        )
+      );
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Calculate days to expiry
   const calculateDaysLeft = (expiryDate) => {
@@ -57,6 +89,8 @@ export default function Expiry() {
 
   // Use analytics data for expiry distribution
   const expiryData = analytics?.expiry_risk_distribution || [];
+
+  const lossByCategory = analytics?.loss_by_category || [];
 
   // Calculate KPIs
   const criticalCount = criticalMedicines.length;
@@ -114,20 +148,79 @@ export default function Expiry() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Expiry Risk by Category">
-          {expiryData.length === 0 ? (
+        <SectionCard title="Potential Loss by Category">
+          {lossByCategory.length === 0 ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               No expiry data available.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={expiryData} margin={{ top: 0, right: 5, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                <XAxis dataKey="range" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {expiryData.map((e, i) => <Cell key={i} fill={e.color} />)}
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart
+                data={lossByCategory}
+                margin={{
+                  top: 15,
+                  right: 20,
+                  left: 45,
+                  bottom: 55,
+                }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
+
+                <XAxis
+                  dataKey="category"
+                  interval={0}
+                  angle={-20}
+                  textAnchor="end"
+                  height={70}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#6b7280",
+                  }}
+                />
+
+                <YAxis
+                  tick={{
+                    fontSize: 11,
+                    fill: "#6b7280",
+                  }}
+                  tickFormatter={(value) => {
+                    if (value >= 100000)
+                      return `₹${(value / 100000).toFixed(1)}L`;
+                    if (value >= 1000)
+                      return `₹${(value / 1000).toFixed(0)}K`;
+                    return `₹${value}`;
+                  }}
+                />
+
+                <Tooltip
+                  formatter={(value) => [
+                    `₹${Number(value).toLocaleString("en-IN")}`,
+                    "Potential Loss",
+                  ]}
+                />
+
+                <Bar
+                  dataKey="loss"
+                  radius={[6, 6, 0, 0]}
+                >
+                  {lossByCategory.map((entry, index) => (
+                    <Cell
+                      key={index}
+                      fill={[
+                        "#3b82f6", // Blue
+                        "#10b981", // Green
+                        "#f59e0b", // Orange
+                        "#8b5cf6", // Purple
+                        "#ef4444", // Red
+                        "#06b6d4", // Cyan
+                        "#84cc16", // Lime
+                        "#ec4899", // Pink
+                      ][index % 8]}
+                    />
+                  ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -166,7 +259,18 @@ export default function Expiry() {
                     </td>
                     <td className="table-td"><Badge variant={e.risk}>{e.risk.charAt(0).toUpperCase() + e.risk.slice(1)} Risk</Badge></td>
                     <td className="table-td">
-                      <button className="text-xs text-blue-600 hover:underline font-medium">Mark for Discount</button>
+                      {e.discount_applied ? (
+                        <span className="text-green-600 font-semibold text-xs">
+                          ✓ Discount Applied
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => markForDiscount(e.id)}
+                          className="text-xs text-blue-600 hover:underline font-medium"
+                        >
+                          Mark for Discount
+                        </button>
+                      )}
                     </td>
                   </motion.tr>
                 ))}

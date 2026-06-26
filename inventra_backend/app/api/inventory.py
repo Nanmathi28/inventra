@@ -24,12 +24,20 @@ from sqlalchemy import asc
 
 @router.get("", response_model=List[InventoryResponse])
 def get_inventory(db: Session = Depends(get_db)):
-    return (
+    inventory_items = (
         db.query(Inventory)
         .order_by(asc(Inventory.id))
         .all()
     )
 
+    for item in inventory_items:
+        item.stock_status = calculate_stock_status(
+            item.current_stock,
+            item.reorder_level,
+            item.safety_stock
+        )
+
+    return inventory_items
 
 @router.get("/{inventory_id}", response_model=InventoryResponse)
 def get_inventory_item(inventory_id: int, db: Session = Depends(get_db)):

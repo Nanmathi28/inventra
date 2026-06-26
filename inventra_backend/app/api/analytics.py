@@ -97,7 +97,45 @@ def get_analytics(db: Session = Depends(get_db)):
         ExpiryRiskDistribution(range="61-90 days", count=moderate_count, color="#3b82f6"),
         ExpiryRiskDistribution(range="> 90 days", count=safe_count, color="#22c55e"),
     ]
-    
+    # Potential loss by category
+    loss_by_category = {}
+
+    inventories = (
+    db.query(Inventory)
+    .join(Medicine)
+    .all()
+   )
+
+    for inventory in inventories:
+
+        if inventory.expiry_date is None:
+            continue
+
+        days_left = (inventory.expiry_date - now).days
+
+    # Only medicines expiring within 90 days
+        if days_left > 90:
+            continue
+
+        category = inventory.medicine.category
+
+        loss = (
+            inventory.current_stock *
+            float(inventory.medicine.price)
+        )
+
+        loss_by_category[category] = (
+            loss_by_category.get(category, 0)
+            + loss
+        )
+
+    loss_by_category_data = [
+        {
+            "category": category,
+            "loss": round(loss, 2)
+        }
+        for category, loss in loss_by_category.items()
+    ]
     # Monthly trends (empty - no sales data available)
     monthly_trends = []
     
@@ -114,9 +152,10 @@ def get_analytics(db: Session = Depends(get_db)):
     ]
     
     return AnalyticsResponse(
-        category_distribution=category_distribution,
-        stock_status_distribution=stock_status_distribution,
-        expiry_risk_distribution=expiry_risk_distribution,
-        monthly_trends=monthly_trends,
-        supplier_performance=supplier_performance
-    )
+    category_distribution=category_distribution,
+    stock_status_distribution=stock_status_distribution,
+    expiry_risk_distribution=expiry_risk_distribution,
+    loss_by_category=loss_by_category_data,
+    monthly_trends=monthly_trends,
+    supplier_performance=supplier_performance
+)

@@ -134,13 +134,20 @@ def seed_inventory(db: Session, df: pd.DataFrame):
     logger.info("Starting inventory seeding...")
     
     # Get unique medicine-inventory combinations
-    unique_inventory = df[['Medicine_Name', 'Current_Stock', 'Safety_Stock', 'Reorder_Level', 'Expiry_Date', 'Batch_Number']].drop_duplicates()
-    logger.info(f"Found {len(unique_inventory)} unique inventory records in CSV")
-    
+    # Use the latest inventory record for each medicine
+    df["Date"] = pd.to_datetime(df["Date"])
+
+    latest_inventory = (
+        df.sort_values("Date")
+          .groupby("Medicine_Name", as_index=False)
+          .last()
+    )
+
+    logger.info(f"Found {len(latest_inventory)} latest inventory records in CSV")
     inventory_inserted = 0
     inventory_skipped = 0
     
-    for _, row in unique_inventory.iterrows():
+    for _, row in latest_inventory.iterrows():
         medicine_name = row['Medicine_Name']
         
         # Get medicine from database

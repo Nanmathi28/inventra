@@ -19,6 +19,10 @@ class ExpiryRiskDistribution(BaseModel):
     count: int
     color: str
 
+class LossByCategory(BaseModel):
+    category: str
+    loss: float
+
 
 class MonthlyTrend(BaseModel):
     month: str
@@ -36,5 +40,6 @@ class AnalyticsResponse(BaseModel):
     category_distribution: List[CategoryDistribution]
     stock_status_distribution: List[StockStatusDistribution]
     expiry_risk_distribution: List[ExpiryRiskDistribution]
+    loss_by_category: List[LossByCategory]
     monthly_trends: List[MonthlyTrend]
     supplier_performance: List[SupplierPerformance]

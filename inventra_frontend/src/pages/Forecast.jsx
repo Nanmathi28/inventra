@@ -17,34 +17,38 @@ export default function Forecast() {
   useEffect(() => {
     Promise.all([
       api.get('/forecast'),
-      api.get('/analytics')
+      api.get('/forecast/chart-data')
     ])
-      .then(([forecastResponse, analyticsResponse]) => {
+      .then(([forecastResponse, chartDataResponse]) => {
         setForecastData(forecastResponse);
-        setAnalytics(analyticsResponse);
+        setAnalytics({ monthly_sales_trend: chartDataResponse?.monthly_sales_trend || [] });
       })
       .catch(err => setError(err.message || 'Could not load forecast data'))
       .finally(() => setLoading(false));
   }, []);
 
-  // Generate monthly forecast data from API response
-  const monthlyForecast = forecastData?.forecasts?.slice(0, 6).map((f, i) => ({
-    month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i],
-    actual: f.current_stock,
-    predicted: f.predicted_demand
-  })) || [];
+  // Top 6 medicines by predicted demand for Historical vs Forecast chart
+  const topMedicines = forecastData?.forecasts
+    ?.slice()
+    .sort((a, b) => b.predicted_demand - a.predicted_demand)
+    .slice(0, 6)
+    .map(f => ({
+      name: f.medicine_name.length > 15 ? f.medicine_name.substring(0, 15) + '...' : f.medicine_name,
+      actual: f.current_demand,
+      predicted: f.predicted_demand
+    })) || [];
 
-  // Use analytics data for sales trend
-  const salesData = analytics?.monthly_trends?.map(t => ({
+  // Use forecast API's monthly sales trend data
+  const salesData = analytics?.monthly_sales_trend?.map(t => ({
     month: t.month,
-    sales: t.value > 0 ? t.value : null,
+    sales: t.total_sales > 0 ? t.total_sales : null,
     forecast: null
   })) || [];
 
   // Use forecast data for medicine predictions
   const forecastMedicines = forecastData?.forecasts?.map(f => ({
     name: f.medicine_name,
-    current: f.current_stock,
+    current: f.current_demand,
     predicted: f.predicted_demand,
     confidence: f.confidence,
     trend: f.trend,
@@ -87,20 +91,20 @@ export default function Forecast() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <SectionCard title="Historical vs Forecast (Monthly Units)">
+        <SectionCard title="Top 6 Medicines by Predicted Demand">
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={monthlyForecast} margin={{ top: 0, right: 5, bottom: 0, left: 0 }}>
+            <BarChart data={topMedicines} margin={{ top: 0, right: 5, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
               <Tooltip />
-              <Bar dataKey="actual" fill="#93c5fd" radius={[3, 3, 0, 0]} name="Actual" />
-              <Bar dataKey="predicted" fill="#34d399" radius={[3, 3, 0, 0]} name="Predicted" />
+              <Bar dataKey="actual" fill="#93c5fd" radius={[3, 3, 0, 0]} name="Current Demand" />
+              <Bar dataKey="predicted" fill="#34d399" radius={[3, 3, 0, 0]} name="Predicted Demand" />
             </BarChart>
           </ResponsiveContainer>
           <div className="flex gap-4 mt-2 text-xs text-gray-400">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-blue-300 inline-block" />Actual</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-400 inline-block" />Predicted</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-blue-300 inline-block" />Current Demand</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-400 inline-block" />Predicted Demand</span>
           </div>
         </SectionCard>
 
@@ -147,13 +151,10 @@ export default function Forecast() {
                 </div>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between text-gray-500 dark:text-gray-400">
-                    <span>Current demand</span><span className="font-medium text-gray-700 dark:text-gray-300">{m.current}/mo</span>
+                    <span>Historical monthly sales</span><span className="font-medium text-gray-700 dark:text-gray-300">{m.current}/mo</span>
                   </div>
                   <div className="flex justify-between text-gray-500 dark:text-gray-400">
                     <span>Predicted</span><span className="font-semibold text-blue-600 dark:text-blue-400">{m.predicted}/mo</span>
-                  </div>
-                  <div className="flex justify-between text-gray-500 dark:text-gray-400">
-                    <span>Confidence</span><span className="font-medium text-gray-700 dark:text-gray-300">{m.confidence}%</span>
                   </div>
                   <div className="flex justify-between text-gray-500 dark:text-gray-400">
                     <span>Trend</span>
@@ -162,13 +163,6 @@ export default function Forecast() {
                       {m.trend.charAt(0).toUpperCase() + m.trend.slice(1)}
                     </span>
                   </div>
-                </div>
-                {/* Confidence bar */}
-                <div className="mt-3">
-                  <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${m.confidence}%` }} />
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-1">{m.confidence}% confidence</p>
                 </div>
               </motion.div>
             ))}

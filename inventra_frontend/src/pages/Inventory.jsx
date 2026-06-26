@@ -203,7 +203,7 @@ export default function Inventory() {
           { label: 'Total Records', value: items.length, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' },
           { label: 'Healthy', value: items.filter(m => m.stock_status === 'GREEN').length, color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' },
           { label: 'Low/Critical', value: lowCriticalCount, color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400' },
-          { label: 'Badges', value: items.filter(m => m.stock_status === 'RED').length, color: 'bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400' },
+          
         ].map((s, i) => (
           <div key={i} className={`rounded-xl px-4 py-3 ${s.color}`}>
             <p className="text-2xl font-bold">{s.value}</p>
@@ -265,9 +265,17 @@ export default function Inventory() {
                       <td className="table-td font-semibold text-gray-800 dark:text-gray-100">{m.medicine_name}</td>
                       <td className="table-td text-gray-500 dark:text-gray-400">{m.category}</td>
                       <td className="table-td">
-                        <span className={`font-semibold ${m.current_stock <= 20 ? 'text-red-600' : m.current_stock <= 80 ? 'text-amber-600' : 'text-gray-700 dark:text-gray-300'}`}>
-                          {m.current_stock}
-                        </span>
+                        <span
+  className={`font-semibold ${
+    m.stock_status === 'RED'
+      ? 'text-red-600'
+      : m.stock_status === 'YELLOW'
+      ? 'text-amber-600'
+      : 'text-gray-700 dark:text-gray-300'
+  }`}
+>
+  {m.current_stock}
+</span>
                       </td>
                       <td className="table-td text-gray-500">{m.reorder_level}</td>
                       <td className="table-td text-gray-500">{m.safety_stock}</td>
