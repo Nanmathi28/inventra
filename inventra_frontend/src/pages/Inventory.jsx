@@ -23,6 +23,8 @@ export default function Inventory() {
   const perPage = 8;
   const [newInventory, setNewInventory] = useState({ medicine_id: '', current_stock: '', reorder_level: '', safety_stock: '', batch_number: '', expiry_date: '' });
   const [addLoading, setAddLoading] = useState(false);
+  const [medicineSearch, setMedicineSearch] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -34,7 +36,9 @@ export default function Inventory() {
       .catch(err => setError(err.message || 'Could not load inventory'))
       .finally(() => setLoading(false));
   }, []);
-
+  const filteredMedicines = medicines.filter(m =>
+    m.medicine_name.toLowerCase().includes(medicineSearch.toLowerCase())
+  );
   const items = useMemo(
     () => inventory.map(item => {
       const medicine = medicines.find(m => m.id === item.medicine_id);
@@ -92,12 +96,17 @@ export default function Inventory() {
         reorder_level: parseInt(newInventory.reorder_level),
         safety_stock: parseInt(newInventory.safety_stock)
       };
-      if (newInventory.batch_number) payload.batch_number = newInventory.batch_number;
-      if (newInventory.expiry_date) payload.expiry_date = newInventory.expiry_date;
-      
+      if (newInventory.batch_number) {
+        payload.batch_number = newInventory.batch_number;
+      }
+
+      if (newInventory.expiry_date) {
+        payload.expiry_date = `${newInventory.expiry_date}T00:00:00`;
+      }
       await api.post('/inventory', payload);
       setShowAdd(false);
       setNewInventory({ medicine_id: '', current_stock: '', reorder_level: '', safety_stock: '', batch_number: '', expiry_date: '' });
+      setMedicineSearch('');
       // Refresh data
       const [inventoryData, medicinesData] = await Promise.all([api.get('/inventory'), api.get('/medicines')]);
       setInventory(inventoryData);
@@ -132,9 +141,13 @@ export default function Inventory() {
         reorder_level: parseInt(editInventory.reorder_level),
         safety_stock: parseInt(editInventory.safety_stock)
       };
-      if (editInventory.batch_number) payload.batch_number = editInventory.batch_number;
-      if (editInventory.expiry_date) payload.expiry_date = editInventory.expiry_date;
-      
+      if (editInventory.batch_number) {
+        payload.batch_number = editInventory.batch_number;
+      }
+      if (editInventory.expiry_date) {
+        payload.expiry_date = `${editInventory.expiry_date}T00:00:00`;
+      }
+
       await api.put(`/inventory/${editInventory.id}`, payload);
       setShowEdit(false);
       setEditInventory(null);
@@ -202,12 +215,14 @@ export default function Inventory() {
       <SectionCard>
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+            />
             <input
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search medicines or ID…"
-              className="input-field pl-8"
+              className="w-full pl-10 pr-4 py-2 border rounded-lg"
             />
           </div>
           <select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }} className="input-field sm:w-44">
@@ -300,14 +315,50 @@ export default function Inventory() {
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Medicine</label>
-                <select
-                  value={newInventory.medicine_id}
-                  onChange={e => setNewInventory(p => ({ ...p, medicine_id: e.target.value }))}
-                  className="input-field"
-                >
-                  <option value="">Select Medicine</option>
-                  {medicines.map(m => <option key={m.id} value={m.id}>{m.medicine_name}</option>)}
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Type medicine name..."
+                    value={medicineSearch}
+                    onChange={(e) => {
+                      setMedicineSearch(e.target.value);
+                      setShowSuggestions(true);
+                      setNewInventory(prev => ({
+                        ...prev,
+                        medicine_id: ''
+                      }));
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    className="input-field"
+                  />
+
+                  {showSuggestions && medicineSearch && (
+                    <div className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border bg-white shadow-lg">
+                      {filteredMedicines.length > 0 ? (
+                        filteredMedicines.map(m => (
+                          <div
+                            key={m.id}
+                            className="cursor-pointer px-4 py-2 hover:bg-blue-100"
+                            onClick={() => {
+                              setMedicineSearch(m.medicine_name);
+                              setNewInventory(prev => ({
+                                ...prev,
+                                medicine_id: m.id
+                              }));
+                              setShowSuggestions(false);
+                            }}
+                          >
+                            {m.medicine_name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-gray-500">
+                          No medicine found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Current Stock</label>

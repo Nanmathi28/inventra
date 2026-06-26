@@ -6,6 +6,7 @@ from app.models.medicine import Medicine
 from app.schemas.medicine import MedicineCreate, MedicineUpdate, MedicineResponse
 from app.auth.dependencies import get_current_user
 from app.models.user import User
+from app.models.inventory import Inventory
 
 router = APIRouter(prefix="/medicines", tags=["Medicines"])
 
@@ -62,22 +63,24 @@ def delete_medicine(
     medicine_id: int,
     db: Session = Depends(get_db)
 ):
-    from app.models.inventory import Inventory
-    
-    db_medicine = db.query(Medicine).filter(Medicine.id == medicine_id).first()
+    db_medicine = db.query(Medicine).filter(
+        Medicine.id == medicine_id
+    ).first()
+
     if not db_medicine:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Medicine not found"
         )
-    
-    # Check for related inventory records
-    inventory_count = db.query(Inventory).filter(Inventory.medicine_id == medicine_id).count()
-    if inventory_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot delete medicine. {inventory_count} inventory record(s) exist. Delete inventory records first."
-        )
-    
+
+    # Delete inventory first (if it exists)
+    inventory = db.query(Inventory).filter(
+        Inventory.medicine_id == medicine_id
+    ).first()
+
+    if inventory:
+        db.delete(inventory)
+
+    # Delete medicine
     db.delete(db_medicine)
     db.commit()

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DateTime, String, ForeignKey
+from sqlalchemy import Column, Integer,DateTime, String, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database.connection import Base
@@ -22,6 +22,11 @@ class Inventory(Base):
     stock_status = Column(String, default=StockStatus.GREEN, nullable=False)
     batch_number = Column(String, nullable=True)
     expiry_date = Column(DateTime, nullable=True)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    updated_at = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
     
     medicine = relationship("Medicine", backref="inventory")
