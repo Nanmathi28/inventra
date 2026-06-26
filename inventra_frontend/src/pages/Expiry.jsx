@@ -31,38 +31,7 @@ export default function Expiry() {
       .catch(err => setError(err.message || 'Could not load expiry data'))
       .finally(() => setLoading(false));
   }, []);
-  const markForDiscount = async (medicineId) => {
-    try {
-      await api.put(`/inventory/${medicineId}/discount`);
-
-      setCriticalMedicines(prev =>
-        prev.map(item =>
-          item.id === medicineId
-            ? { ...item, discount_applied: true }
-            : item
-        )
-      );
-
-      setWarningMedicines(prev =>
-        prev.map(item =>
-          item.id === medicineId
-            ? { ...item, discount_applied: true }
-            : item
-        )
-      );
-
-      setSafeMedicines(prev =>
-        prev.map(item =>
-          item.id === medicineId
-            ? { ...item, discount_applied: true }
-            : item
-        )
-      );
-
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  
 
   // Calculate days to expiry
   const calculateDaysLeft = (expiryDate) => {
@@ -243,7 +212,6 @@ export default function Expiry() {
                   <th className="table-th">Expiry Date</th>
                   <th className="table-th">Days Left</th>
                   <th className="table-th">Risk Level</th>
-                  <th className="table-th">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700/40">
@@ -254,24 +222,10 @@ export default function Expiry() {
                     <td className="table-td text-gray-500 dark:text-gray-400">{e.expiry}</td>
                     <td className="table-td">
                       <span className={`font-bold text-sm ${e.daysLeft <= 21 ? 'text-red-600' : e.daysLeft <= 60 ? 'text-amber-600' : 'text-green-600'}`}>
-                        {e.daysLeft}d
+                        {e.daysLeft}
                       </span>
                     </td>
                     <td className="table-td"><Badge variant={e.risk}>{e.risk.charAt(0).toUpperCase() + e.risk.slice(1)} Risk</Badge></td>
-                    <td className="table-td">
-                      {e.discount_applied ? (
-                        <span className="text-green-600 font-semibold text-xs">
-                          ✓ Discount Applied
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => markForDiscount(e.id)}
-                          className="text-xs text-blue-600 hover:underline font-medium"
-                        >
-                          Mark for Discount
-                        </button>
-                      )}
-                    </td>
                   </motion.tr>
                 ))}
               </tbody>
