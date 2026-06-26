@@ -18,16 +18,18 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     total_inventory_items = db.query(func.count(Inventory.id)).scalar()
     
     low_stock_items = db.query(func.count(Inventory.id)).filter(
-        Inventory.stock_status == "YELLOW"
+        Inventory.current_stock > Inventory.safety_stock,
+        Inventory.current_stock <= Inventory.reorder_level
     ).scalar()
     
     critical_stock_items = db.query(func.count(Inventory.id)).filter(
-        Inventory.stock_status == "RED"
+        Inventory.current_stock <= Inventory.safety_stock
     ).scalar()
     
     critical_date = datetime.now() + timedelta(days=30)
     near_expiry_items = db.query(func.count(Inventory.id)).filter(
-    Inventory.expiry_date <= critical_date
+        Inventory.expiry_date.isnot(None),
+        Inventory.expiry_date <= critical_date
     ).scalar()
     
     total_suppliers = db.query(func.count(Supplier.id)).scalar()

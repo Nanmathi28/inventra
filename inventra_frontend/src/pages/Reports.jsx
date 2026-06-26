@@ -11,6 +11,7 @@ export default function Reports() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const lossByCategory = analytics?.loss_by_category || [];
 
   useEffect(() => {
     api.get('/analytics')
@@ -98,26 +99,59 @@ export default function Reports() {
           )}
         </SectionCard>
 
-        <SectionCard title="Category-wise Distribution">
-          {categoryDemand.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              No category data available.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={210}>
-              <BarChart data={categoryDemand} margin={{ top: 0, right: 5, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                <XAxis dataKey="category" tick={{ fontSize: 9, fill: '#9ca3af' }} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {categoryDemand.map((e, i) => <Cell key={i} fill={e.color} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </SectionCard>
-
+        <SectionCard title="Potential Loss by Category">
+                  {lossByCategory.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                      No expiry data available.
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+          <BarChart
+            data={lossByCategory}
+            margin={{ top: 10, right: 20, left: 20, bottom: 30 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+        
+            <XAxis
+              dataKey="category"
+              angle={-20}
+              textAnchor="end"
+              interval={0}
+              tick={{ fontSize: 11 }}
+            />
+        
+            <YAxis
+              tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+            />
+        
+            <Tooltip
+              formatter={(value) => [
+                `₹${Number(value).toLocaleString()}`,
+                "Potential Loss"
+              ]}
+            />
+        
+            <Bar dataKey="loss" radius={[4, 4, 0, 0]}>
+              {lossByCategory.map((entry, index) => (
+                <Cell
+                  key={index}
+                  fill={[
+                    "#3b82f6",
+                    "#10b981",
+                    "#f59e0b",
+                    "#8b5cf6",
+                    "#ef4444",
+                    "#06b6d4",
+                    "#84cc16",
+                    "#ec4899"
+                  ][index % 8]}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+                  )}
+                </SectionCard>
         <SectionCard title="Inventory Health Distribution">
           {inventoryHealth.length === 0 ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400">

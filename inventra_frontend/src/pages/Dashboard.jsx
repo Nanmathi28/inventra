@@ -24,7 +24,7 @@ export default function Dashboard() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const lossByCategory = analytics?.loss_by_category || [];
   useEffect(() => {
     const fetchDashboardData = () => {
       Promise.all([
@@ -45,7 +45,6 @@ export default function Dashboard() {
         })
         .finally(() => setLoading(false));
     };
-
     fetchDashboardData();
 
     // Auto-refresh dashboard every 30 seconds
@@ -70,7 +69,6 @@ export default function Dashboard() {
     sales: t.value > 0 ? t.value : null,
     forecast: null
   })) || [];
-
   const inventoryHealth = analytics?.stock_status_distribution || [];
   const categoryDemand = analytics?.category_distribution || [];
   const expiryData = analytics?.expiry_risk_distribution || [];
@@ -81,7 +79,7 @@ export default function Dashboard() {
     suggested: r.recommended_reorder_qty,
     priority: r.priority_level === 'critical' ? 'red' : r.priority_level === 'high' ? 'amber' : 'green'
   })) || [];
-
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -102,7 +100,13 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Predictive overview · June 10, 2026</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          {new Date().toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
       </div>
 
       {/* KPIs */}
@@ -113,40 +117,32 @@ export default function Dashboard() {
       </div>
 
       {/* Charts row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Sales + Forecast */}
-        <SectionCard title="Sales & Demand Forecast — 2026" className="lg:col-span-2">
-          <ResponsiveContainer width="100%" height={220}>
+        <SectionCard title="Sales Value Trend & Forecast">
+          <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={salesData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
               <defs>
-                <linearGradient id="gSales" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gForecast" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} />
               <YAxis tickFormatter={v => `₹${v / 1000}K`} tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
-              <Tooltip formatter={(v, n) => [fmt(v), n === 'sales' ? 'Sales' : 'Forecast']} />
-              <Area type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={2} fill="url(#gSales)" connectNulls={false} dot={{ r: 3, fill: '#3b82f6' }} name="sales" />
-              <Area type="monotone" dataKey="forecast" stroke="#22c55e" strokeWidth={2} strokeDasharray="5 4" fill="url(#gForecast)" connectNulls dot={{ r: 3, fill: '#22c55e' }} name="forecast" />
+              <Tooltip formatter={v => v ? `₹${(v / 1000).toFixed(0)}K` : '—'} />
+              <Area type="monotone" dataKey="forecast" stroke="#8b5cf6" strokeWidth={2} fill="url(#gArea)" name="Forecast" connectNulls dot={{ r: 3, fill: '#8b5cf6' }} />
+              <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3, fill: '#3b82f6' }} name="Sales" connectNulls={false} />
             </AreaChart>
           </ResponsiveContainer>
-          <div className="flex gap-4 mt-2 text-xs text-gray-400">
-            <span className="flex items-center gap-1.5"><span className="w-6 h-0.5 bg-blue-500 inline-block rounded" />Historical Sales</span>
-            <span className="flex items-center gap-1.5"><span className="w-6 h-0.5 bg-green-500 inline-block rounded border-dashed" />AI Forecast</span>
-          </div>
         </SectionCard>
 
         {/* Inventory Health Donut */}
         <SectionCard title="Inventory Health">
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={260}>
             <PieChart>
-              <Pie data={inventoryHealth} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
+              <Pie data={inventoryHealth} cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={2} dataKey="value">
                 {inventoryHealth.map((e, i) => (
                   <Cell key={i} fill={COLORS[i]} />
                 ))}
@@ -171,18 +167,58 @@ export default function Dashboard() {
       {/* Charts row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Category demand */}
-        <SectionCard title="Category-wise Demand (Monthly)">
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={categoryDemand} layout="vertical" margin={{ top: 0, right: 20, bottom: 0, left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
-              <YAxis type="category" dataKey="category" tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} width={90} />
-              <Tooltip />
-              <Bar dataKey="demand" radius={[0, 4, 4, 0]}>
-                {categoryDemand.map((e, i) => <Cell key={i} fill={e.color} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        <SectionCard title="Potential Loss by Category">
+          {lossByCategory.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              No expiry data available.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+  <BarChart
+    data={lossByCategory}
+    margin={{ top: 10, right: 20, left: 20, bottom: 30 }}
+  >
+    <CartesianGrid strokeDasharray="3 3" />
+
+    <XAxis
+      dataKey="category"
+      angle={-20}
+      textAnchor="end"
+      interval={0}
+      tick={{ fontSize: 11 }}
+    />
+
+    <YAxis
+      tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+    />
+
+    <Tooltip
+      formatter={(value) => [
+        `₹${Number(value).toLocaleString()}`,
+        "Potential Loss"
+      ]}
+    />
+
+    <Bar dataKey="loss" radius={[4, 4, 0, 0]}>
+      {lossByCategory.map((entry, index) => (
+        <Cell
+          key={index}
+          fill={[
+            "#3b82f6",
+            "#10b981",
+            "#f59e0b",
+            "#8b5cf6",
+            "#ef4444",
+            "#06b6d4",
+            "#84cc16",
+            "#ec4899"
+          ][index % 8]}
+        />
+      ))}
+    </Bar>
+  </BarChart>
+</ResponsiveContainer>
+          )}
         </SectionCard>
 
         {/* Expiry Risk */}

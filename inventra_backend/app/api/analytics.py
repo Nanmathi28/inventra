@@ -13,17 +13,30 @@ from app.schemas.analytics import (
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
+def calculate_stock_status(current_stock, reorder_level, safety_stock):
 
+    if current_stock <= safety_stock:
+        return "RED"
+
+    elif current_stock <= reorder_level:
+        return "YELLOW"
+
+    return "GREEN"
 @router.get("", response_model=AnalyticsResponse)
 def get_analytics(db: Session = Depends(get_db)):
     """
     Get comprehensive analytics data for reports and dashboards.
     """
     # Category-wise distribution
-    category_query = db.query(
+    category_query = (
+    db.query(
         Medicine.category,
-        func.count(Medicine.id).label('count')
-    ).group_by(Medicine.category).all()
+        func.sum(Inventory.current_stock).label("stock")
+    )
+    .join(Inventory, Inventory.medicine_id == Medicine.id)
+    .group_by(Medicine.category)
+    .all()
+    )
     
     category_colors = {
         'Analgesics': '#3b82f6',
@@ -38,34 +51,50 @@ def get_analytics(db: Session = Depends(get_db)):
     }
     
     category_distribution = [
-        CategoryDistribution(
-            category=cat,
-            count=count,
-            color=category_colors.get(cat, '#6b7280')
-        )
-        for cat, count in category_query
-    ]
+    CategoryDistribution(
+        category=cat,
+        count=int(stock or 0),
+        color=category_colors.get(cat, "#6b7280")
+    )
+    for cat, stock in category_query
+   ]
     
     # Stock status distribution
-    stock_status_query = db.query(
-        Inventory.stock_status,
-        func.count(Inventory.id).label('count')
-    ).group_by(Inventory.stock_status).all()
-    
-    status_colors = {
-        'GREEN': '#22c55e',
-        'YELLOW': '#f59e0b',
-        'RED': '#ef4444',
-    }
-    
+    green = yellow = red = 0
+
+    inventories = db.query(Inventory).all()
+
+    for item in inventories:
+        status = calculate_stock_status(
+        item.current_stock,
+        item.reorder_level,
+        item.safety_stock
+    )
+
+        if status == "GREEN":
+            green += 1
+        elif status == "YELLOW":
+            yellow += 1
+        else:
+            red += 1
+
     stock_status_distribution = [
         StockStatusDistribution(
-            name=status.replace('_', ' ').title(),
-            value=count,
-            color=status_colors.get(status, '#6b7280')
+            name="Green",
+            value=green,
+            color="#22c55e"
+        ),
+        StockStatusDistribution(
+            name="Yellow",
+            value=yellow,
+            color="#f59e0b"
+        ),
+        StockStatusDistribution(
+            name="Red",
+            value=red,
+            color="#ef4444"
         )
-        for status, count in stock_status_query
-    ]
+]
     
     # Expiry risk distribution
     now = datetime.now()
@@ -137,8 +166,31 @@ def get_analytics(db: Session = Depends(get_db)):
         for category, loss in loss_by_category.items()
     ]
     # Monthly trends (empty - no sales data available)
+    from app.api.forecast import build_medicine_features, run_prediction
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+    inventories = db.query(Inventory).join(Medicine).all()
+
+    base_demand = 0
+
+    for inventory in inventories:
+     features = build_medicine_features(
+        inventory.medicine,
+        inventory
+    )
+
+     base_demand += run_prediction(features)
+
     monthly_trends = []
-    
+
+    growth = [1.00, 1.04, 1.08, 1.12, 1.16, 1.20]
+
+    for month, factor in zip(months, growth):
+     monthly_trends.append(
+        MonthlyTrend(
+            month=month,
+            value=int(base_demand * factor)
+        )
+    )
     # Supplier performance (use actual reliability_score from database)
     suppliers = db.query(Supplier).all()
     supplier_performance = [
