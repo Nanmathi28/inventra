@@ -12,7 +12,20 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const lossByCategory = analytics?.loss_by_category || [];
-
+useEffect(() => {
+  // Hide navbar/sidebar on print
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @media print {
+      nav, aside, .sidebar, .navbar, header, button {
+        display: none !important;
+      }
+      body { margin: 0; padding: 0; }
+      .space-y-5 { max-width: 100%; }
+    }
+  `;
+  document.head.appendChild(style);
+}, []);
   useEffect(() => {
     api.get('/analytics')
       .then(data => setAnalytics(data))
@@ -36,8 +49,12 @@ export default function Reports() {
   const criticalStock = inventoryHealth.find(i => i.name.toLowerCase().includes('critical'))?.value || 0;
 
   const handlePrint = () => {
-    window.print();
-  };
+    window.dispatchEvent(new Event("resize"));
+
+    setTimeout(() => {
+        window.print();
+    }, 500);
+};
 
   if (loading) {
     return (
@@ -56,7 +73,7 @@ export default function Reports() {
   }
 
   return (
-    <div className="space-y-5">
+    <div id="print-report" className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Reports & Analytics</h1>

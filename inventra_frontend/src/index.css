@@ -3,6 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @layer base {
   * { box-sizing: border-box; }
   body { @apply font-sans antialiased; }
@@ -51,4 +52,73 @@
   .section-title {
     @apply text-base font-semibold text-gray-800 dark:text-gray-100;
   }
+}
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
+@media print {
+
+  html,
+  body {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: auto;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #print-report,
+  #print-report * {
+    visibility: visible;
+  }
+
+  #print-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+    padding: 20px;
+  }
+
+  button,
+  nav,
+  aside,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  .glass-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  svg {
+    overflow: visible !important;
+  }
+
+  .recharts-wrapper {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+@media print {
+
+  .grid {
+    display: block !important;
+  }
+
+  .grid > * {
+    margin-bottom: 20px;
+  }
+
 }
