@@ -53,7 +53,17 @@ def get_portal_data(db: Session = Depends(get_db), current_user: User = Depends(
             ))
     
     # Get user's orders
-    orders = db.query(Order).filter(Order.user_id == current_user.id).order_by(Order.created_at.desc()).all()
+    db_orders = (
+        db.query(Order)
+            .filter(Order.user_id == current_user.id)
+            .order_by(Order.created_at.desc())
+            .all()
+    )
+
+    orders = [
+        OrderResponse.model_validate(order)
+        for order in db_orders
+    ]
     
     # Prescriptions would come from their respective tables
     # For now, return empty list as this feature is not fully implemented

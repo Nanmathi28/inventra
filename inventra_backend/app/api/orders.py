@@ -8,8 +8,16 @@ from app.models.order import Order, OrderItem, OrderStatus
 from app.models.medicine import Medicine
 from app.models.inventory import Inventory
 from app.models.user import User
-from app.schemas.order import OrderCreate, OrderUpdate, OrderResponse, OrderItemCreate, OrderListResponse
+from app.schemas.order import (
+    OrderCreate,
+    OrderUpdate,
+    OrderResponse,
+    OrderItemCreate,
+    OrderListResponse,
+)
 from app.auth.dependencies import get_current_user
+from app.models.alert import Alert, AlertType, AlertStatus
+
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -25,7 +33,7 @@ def generate_order_number() -> str:
 def create_order(
     order_data: OrderCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Create a new order with items.
@@ -37,28 +45,34 @@ def create_order(
     """
     order_number = generate_order_number()
     total_amount = 0.0
-    
+
     # Validate items and calculate total
     for item_data in order_data.items:
-        medicine = db.query(Medicine).filter(Medicine.id == item_data.medicine_id).first()
+        medicine = (
+            db.query(Medicine).filter(Medicine.id == item_data.medicine_id).first()
+        )
         if not medicine:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Medicine with id {item_data.medicine_id} not found"
+                detail=f"Medicine with id {item_data.medicine_id} not found",
             )
-        
+
         # Check inventory
-        inventory = db.query(Inventory).filter(Inventory.medicine_id == item_data.medicine_id).first()
+        inventory = (
+            db.query(Inventory)
+            .filter(Inventory.medicine_id == item_data.medicine_id)
+            .first()
+        )
         if not inventory or inventory.current_stock < item_data.quantity:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Insufficient stock for {medicine.medicine_name}"
+                detail=f"Insufficient stock for {medicine.medicine_name}",
             )
-        
+
         # Calculate subtotal
         subtotal = item_data.quantity * item_data.price
         total_amount += subtotal
-    
+
     # Create order
     order = Order(
         user_id=current_user.id,
@@ -67,11 +81,40 @@ def create_order(
         status=OrderStatus.PENDING,
         shipping_address=order_data.shipping_address,
         phone=order_data.phone,
-        notes=order_data.notes
+        notes=order_data.notes,
     )
     db.add(order)
     db.flush()  # Get order ID without committing
-    
+
+    # Create alert for pharmacist/admin
+
+    for item in order_data.items:
+        medicine = db.query(Medicine).filter(Medicine.id == item.medicine_id).first()
+
+        alert = Alert(
+            medicine_id=item.medicine_id,
+            alert_type="patient_request",
+            message=(
+                f"New patient request.\n"
+                f"Patient: {current_user.full_name}\n"
+                f"Medicine: {medicine.medicine_name}\n"
+                f"Quantity: {item.quantity}\n"
+                f"Order ID: {order.id}\n"
+                f"Order No: {order_number}"
+            ),
+            status=AlertStatus.ACTIVE,
+        )
+    db.add(alert)
+
+    # alert = Alert(
+    #     medicine_id=order_data.items[0].medicine_id,
+    #     alert_type=AlertType.PATIENT_REQUEST,
+    #     message=f"New medicine request from {current_user.full_name}. Order {order_number} requires approval.",
+    #     status=AlertStatus.ACTIVE,
+    # )
+
+    # db.add(alert)
+
     # Create order items and update inventory
     for item_data in order_data.items:
         # Create order item
@@ -81,25 +124,13 @@ def create_order(
             medicine_id=item_data.medicine_id,
             quantity=item_data.quantity,
             price=item_data.price,
-            subtotal=subtotal
+            subtotal=subtotal,
         )
         db.add(order_item)
-        
-        # Reduce inventory stock
-        inventory = db.query(Inventory).filter(Inventory.medicine_id == item_data.medicine_id).first()
-        if inventory:
-            inventory.current_stock -= item_data.quantity
-            # Recalculate stock status
-            if inventory.current_stock <= inventory.safety_stock:
-                inventory.stock_status = "RED"
-            elif inventory.current_stock <= inventory.reorder_level:
-                inventory.stock_status = "YELLOW"
-            else:
-                inventory.stock_status = "GREEN"
-    
+
     db.commit()
     db.refresh(order)
-    
+
     return order
 
 
@@ -108,12 +139,38 @@ def get_orders(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Get orders for the current user."""
-    orders = db.query(Order).filter(Order.user_id == current_user.id).offset(skip).limit(limit).all()
+    orders = (
+        db.query(Order)
+        .filter(Order.user_id == current_user.id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     total = db.query(Order).filter(Order.user_id == current_user.id).count()
-    
+
+    return OrderListResponse(orders=orders, total=total)
+
+
+@router.get("/admin", response_model=OrderListResponse)
+def get_all_orders(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    orders = (
+        db.query(Order)
+        .order_by(Order.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    total = db.query(Order).count()
+
     return OrderListResponse(orders=orders, total=total)
 
 
@@ -121,20 +178,20 @@ def get_orders(
 def get_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Get a specific order by ID."""
-    order = db.query(Order).filter(
-        Order.id == order_id,
-        Order.user_id == current_user.id
-    ).first()
-    
+    order = (
+        db.query(Order)
+        .filter(Order.id == order_id, Order.user_id == current_user.id)
+        .first()
+    )
+
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Order not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
         )
-    
+
     return order
 
 
@@ -143,58 +200,147 @@ def update_order(
     order_id: int,
     order_update: OrderUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Update order status and details."""
-    order = db.query(Order).filter(
-        Order.id == order_id,
-        Order.user_id == current_user.id
-    ).first()
-    
+    order = (
+        db.query(Order)
+        .filter(Order.id == order_id, Order.user_id == current_user.id)
+        .first()
+    )
+
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Order not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
         )
-    
+
     update_data = order_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(order, field, value)
-    
+
     db.commit()
     db.refresh(order)
-    
+
     return order
+
+
+@router.post("/{order_id}/approve")
+def approve_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    order = db.query(Order).filter(Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Update order status
+    order.status = OrderStatus.CONFIRMED
+
+    # Reduce inventory only after approval
+    for item in order.order_items:
+        inventory = (
+            db.query(Inventory)
+            .filter(Inventory.medicine_id == item.medicine_id)
+            .first()
+        )
+
+        if inventory:
+            inventory.current_stock -= item.quantity
+
+            if inventory.current_stock <= inventory.safety_stock:
+                inventory.stock_status = "RED"
+
+            elif inventory.current_stock <= inventory.reorder_level:
+                inventory.stock_status = "YELLOW"
+
+            else:
+                inventory.stock_status = "GREEN"
+
+    # Resolve patient request alert
+    alert = (
+        db.query(Alert)
+        .filter(
+            Alert.message.contains(order.order_number),
+            Alert.alert_type == "patient_request",
+        )
+        .first()
+    )
+
+    if alert:
+        alert.status = AlertStatus.RESOLVED
+
+    db.commit()
+
+    return {"message": "Order approved successfully"}
+
+
+@router.post("/{order_id}/reject")
+def reject_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    order = db.query(Order).filter(Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.status == OrderStatus.CANCELLED:
+        return {"message": "Already cancelled"}
+
+    order.status = OrderStatus.CANCELLED
+
+    alert = (
+        db.query(Alert)
+        .filter(
+            Alert.message.contains(order.order_number),
+            Alert.alert_type == "patient_request",
+        )
+        .first()
+    )
+
+    if alert:
+        alert.status = AlertStatus.RESOLVED
+
+    db.commit()
+
+    return {"message": "Order rejected successfully"}
 
 
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
 def cancel_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Cancel an order and restore inventory stock."""
-    order = db.query(Order).filter(
-        Order.id == order_id,
-        Order.user_id == current_user.id
-    ).first()
-    
+    order = (
+        db.query(Order)
+        .filter(Order.id == order_id, Order.user_id == current_user.id)
+        .first()
+    )
+
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Order not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
         )
-    
+
     # Only allow cancellation of pending orders
     if order.status != OrderStatus.PENDING:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Can only cancel pending orders"
+            detail="Can only cancel pending orders",
         )
-    
+
     # Restore inventory stock
     for order_item in order.order_items:
-        inventory = db.query(Inventory).filter(Inventory.medicine_id == order_item.medicine_id).first()
+        inventory = (
+            db.query(Inventory)
+            .filter(Inventory.medicine_id == order_item.medicine_id)
+            .first()
+        )
         if inventory:
             inventory.current_stock += order_item.quantity
             # Recalculate stock status
@@ -204,7 +350,7 @@ def cancel_order(
                 inventory.stock_status = "YELLOW"
             else:
                 inventory.stock_status = "GREEN"
-    
+
     # Update order status
     order.status = OrderStatus.CANCELLED
     db.commit()

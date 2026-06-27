@@ -7,6 +7,8 @@ from app.models.medicine import Medicine
 from app.models.inventory import Inventory
 from app.models.supplier import Supplier
 from app.schemas.dashboard import DashboardSummary
+from app.models.order import Order
+from app.models.user import User
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -33,6 +35,25 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     ).scalar()
     
     total_suppliers = db.query(func.count(Supplier.id)).scalar()
+    
+    # Pending Patient Orders
+    pending_orders = (
+        db.query(Order)
+            .join(User)
+            .filter(Order.status == "pending")
+            .order_by(Order.created_at.desc())
+            .limit(5)
+            .all()
+    )
+
+    # Recent Orders
+    recent_orders = (
+        db.query(Order)
+            .join(User)
+            .order_by(Order.created_at.desc())
+            .limit(5)
+            .all()
+    )
     
     return DashboardSummary(
         total_medicines=total_medicines or 0,

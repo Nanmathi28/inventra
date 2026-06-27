@@ -9,6 +9,7 @@ class AlertType(str, enum.Enum):
     LOW_STOCK = "low_stock"
     CRITICAL_STOCK = "critical_stock"
     NEAR_EXPIRY = "near_expiry"
+    PATIENT_REQUEST = "patient_request"
 
 
 class AlertStatus(str, enum.Enum):
