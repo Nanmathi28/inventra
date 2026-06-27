@@ -273,7 +273,7 @@ export default function CustomerPortal() {
                     <p className="text-xs text-gray-400 truncate mt-0.5">{o.order_items?.length || 0} items</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">${o.total_amount?.toFixed(2) || '0.00'}</p>
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">₹{Number(o.total_amount).toLocaleString("en-IN") || '0.00'}</p>
                     <p className="text-[10px] text-gray-400 mt-0.5">{new Date(o.created_at).toLocaleDateString()}</p>
                   </div>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold capitalize ${o.status === 'delivered' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : o.status === 'pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>{o.status}</span>

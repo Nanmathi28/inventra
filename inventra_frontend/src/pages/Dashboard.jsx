@@ -8,6 +8,7 @@ import { Package, DollarSign, TrendingUp, Activity, AlertTriangle, Clock, Shoppi
 import { KPICard, SectionCard, Badge } from '../components/ui';
 import { api } from '../services/api';
 
+
 const COLORS = ['#22c55e', '#f59e0b', '#ef4444', '#6b7280'];
 
 function fmt(v) {
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [orders, setOrders] = useState([]);
   const lossByCategory = analytics?.loss_by_category || [];
   useEffect(() => {
     const fetchDashboardData = () => {
@@ -31,13 +33,15 @@ export default function Dashboard() {
         api.get('/dashboard/summary'),
         api.get('/analytics'),
         api.get('/restocking/recommendations'),
-        api.get('/alerts')
+        api.get('/alerts'),
+        api.get("/orders/admin")
       ])
-        .then(([summaryData, analyticsData, restockData, alertsData]) => {
+        .then(([summaryData, analyticsData, restockData, alertsData, ordersData]) => {
           setSummary(summaryData);
           setAnalytics(analyticsData);
           setRestock(restockData);
           setAlerts(alertsData.slice(0, 5));
+          setOrders(ordersData.orders || []);
         })
         .catch(err => {
           console.error('Dashboard error:', err);
@@ -49,8 +53,17 @@ export default function Dashboard() {
 
     // Auto-refresh dashboard every 30 seconds
     const interval = setInterval(fetchDashboardData, 30000);
+
     return () => clearInterval(interval);
   }, []);
+
+  const pendingOrders = orders.filter(
+    order => order.status === "pending"
+  );
+
+  const recentOrders = [...orders]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5);
 
   const kpis = [
     { icon: <Pill size={20} />, label: 'Total Medicines', value: summary ? summary.total_medicines.toString() : '0', sub: 'Total registered', trend: '', color: 'blue', delay: 0 },
@@ -79,7 +92,7 @@ export default function Dashboard() {
     suggested: r.recommended_reorder_qty,
     priority: r.priority_level === 'critical' ? 'red' : r.priority_level === 'high' ? 'amber' : 'green'
   })) || [];
-  
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -174,50 +187,50 @@ export default function Dashboard() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-  <BarChart
-    data={lossByCategory}
-    margin={{ top: 10, right: 20, left: 20, bottom: 30 }}
-  >
-    <CartesianGrid strokeDasharray="3 3" />
+              <BarChart
+                data={lossByCategory}
+                margin={{ top: 10, right: 20, left: 20, bottom: 30 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
 
-    <XAxis
-      dataKey="category"
-      angle={-20}
-      textAnchor="end"
-      interval={0}
-      tick={{ fontSize: 11 }}
-    />
+                <XAxis
+                  dataKey="category"
+                  angle={-20}
+                  textAnchor="end"
+                  interval={0}
+                  tick={{ fontSize: 11 }}
+                />
 
-    <YAxis
-      tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
-    />
+                <YAxis
+                  tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+                />
 
-    <Tooltip
-      formatter={(value) => [
-        `₹${Number(value).toLocaleString()}`,
-        "Potential Loss"
-      ]}
-    />
+                <Tooltip
+                  formatter={(value) => [
+                    `₹${Number(value).toLocaleString()}`,
+                    "Potential Loss"
+                  ]}
+                />
 
-    <Bar dataKey="loss" radius={[4, 4, 0, 0]}>
-      {lossByCategory.map((entry, index) => (
-        <Cell
-          key={index}
-          fill={[
-            "#3b82f6",
-            "#10b981",
-            "#f59e0b",
-            "#8b5cf6",
-            "#ef4444",
-            "#06b6d4",
-            "#84cc16",
-            "#ec4899"
-          ][index % 8]}
-        />
-      ))}
-    </Bar>
-  </BarChart>
-</ResponsiveContainer>
+                <Bar dataKey="loss" radius={[4, 4, 0, 0]}>
+                  {lossByCategory.map((entry, index) => (
+                    <Cell
+                      key={index}
+                      fill={[
+                        "#3b82f6",
+                        "#10b981",
+                        "#f59e0b",
+                        "#8b5cf6",
+                        "#ef4444",
+                        "#06b6d4",
+                        "#84cc16",
+                        "#ec4899"
+                      ][index % 8]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           )}
         </SectionCard>
 
@@ -262,36 +275,92 @@ export default function Dashboard() {
         </SectionCard>
 
         {/* Alerts */}
-        <SectionCard title="Active Alerts"
-          action={<Badge variant="red">{alerts.filter(a => !a.read).length} unread</Badge>}
-        >
-          <div className="space-y-2.5">
-            {alerts.slice(0, 5).map(a => (
-              <div key={a.id} className={`flex gap-3 p-3 rounded-xl ${!a.read ? 'bg-red-50/60 dark:bg-red-900/10' : 'bg-gray-50 dark:bg-gray-800/40'}`}>
-                <span className={`mt-1 w-2 h-2 flex-shrink-0 rounded-full ${a.type === 'critical' ? 'bg-red-500' : a.type === 'expiry' ? 'bg-orange-500' : a.type === 'forecast' ? 'bg-blue-500' : 'bg-amber-500'}`} />
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{a.title}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 leading-tight">{a.desc}</p>
-                  <p className="text-[10px] text-gray-300 dark:text-gray-500 mt-1">{a.time}</p>
+        <SectionCard title="Pending Patient Requests">
+
+          <div className="space-y-2">
+
+            {pendingOrders.length === 0 ? (
+
+              <p className="text-sm text-gray-400 text-center py-6">
+                No pending patient requests.
+              </p>
+
+            ) : (
+
+              pendingOrders.map(order => (
+
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between py-2 border-b last:border-0"
+                >
+
+                  <div>
+                    <p className="text-sm font-medium">
+                      {order.order_number}
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+                      {order.user_name}
+                    </p>
+
+                  </div>
+
+                  <Badge variant="amber">
+                    Pending
+                  </Badge>
+
                 </div>
-              </div>
-            ))}
+
+              ))
+
+            )}
+
           </div>
+
         </SectionCard>
 
         {/* Restock suggestions */}
-        <SectionCard title="Top Restock Suggestions">
+        <SectionCard title="Recent Orders">
+
           <div className="space-y-2">
-            {restockItems.slice(0, 5).map((r, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700/40 last:border-0">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{r.medicine}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Stock: {r.stock} · Order: {r.suggested} units</p>
+
+            {recentOrders.map(order => (
+
+              <div
+                key={order.id}
+                className="flex items-center justify-between py-2 border-b last:border-0"
+              >
+
+                <div>
+
+                  <p className="text-sm font-medium">
+                    {order.order_number}
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    {order.user_name}
+                  </p>
+
                 </div>
-                <Badge variant={r.priority}>{r.priority}</Badge>
+
+                <Badge
+                  variant={
+                    order.status === "confirmed"
+                      ? "green"
+                      : order.status === "cancelled"
+                        ? "red"
+                        : "amber"
+                  }
+                >
+                  {order.status}
+                </Badge>
+
               </div>
+
             ))}
+
           </div>
+
         </SectionCard>
       </div>
     </div>
