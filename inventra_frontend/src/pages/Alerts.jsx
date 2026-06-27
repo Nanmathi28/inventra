@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, AlertTriangle, Clock, TrendingUp, RefreshCw, CheckCircle, AlertCircle, AlertOctagon, Calendar, BarChart3 } from 'lucide-react';
+import { Bell, AlertTriangle, Clock, TrendingUp, RefreshCw, CheckCircle, AlertCircle, AlertOctagon, Calendar, BarChart3, FileText } from 'lucide-react';
 import { SectionCard, KPICard, Badge } from '../components/ui';
 import { api } from '../services/api';
 import {
@@ -19,6 +19,7 @@ const typeConfig = {
   low: { label: 'Low Stock', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-700/40', dot: 'bg-amber-500', icon: Bell },
   expiry: { label: 'Expiry Alert', color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-700/40', dot: 'bg-orange-500', icon: Clock },
   requests: { label: 'Patient Requests', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-200 dark:border-blue-700/40', dot: 'bg-blue-500', icon: ShoppingCart },
+  prescription: { label: "Prescription Upload", color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-900/20", border: "border-indigo-200 dark:border-indigo-700/40", dot: "bg-indigo-500", icon: FileText, },
 };
 
 const typeKey = {
@@ -26,6 +27,7 @@ const typeKey = {
   low_stock: 'low',
   near_expiry: 'expiry',
   patient_request: 'requests',
+  prescription_upload: "prescription",
 };
 
 export default function Alerts() {
@@ -70,20 +72,21 @@ export default function Alerts() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
         {[
           { label: 'All Alerts', value: alerts.length, color: 'blue', icon: <Bell size={20} /> },
           { label: 'Critical', value: alerts.filter(a => typeKey[a.alert_type] === 'critical').length, color: 'red', icon: <AlertOctagon size={20} /> },
           { label: 'Low Stock', value: alerts.filter(a => typeKey[a.alert_type] === 'low').length, color: 'amber', icon: <AlertTriangle size={20} /> },
           { label: 'Expiry', value: alerts.filter(a => typeKey[a.alert_type] === 'expiry').length, color: 'amber', icon: <Calendar size={20} /> },
           { label: 'Patient Requests', value: alerts.filter(a => a.alert_type === 'patient_request').length, color: 'blue', icon: <ShoppingCart size={20} /> },
+          { label: "Prescription Uploads", value: alerts.filter(a => a.alert_type === "prescription_upload").length, color: "indigo", icon: <FileText size={20} /> },
         ].map((s, i) => (
           <KPICard key={i} icon={s.icon} label={s.label} value={s.value.toString()} color={s.color} delay={i * 0.05} />
         ))}
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        {['all', 'unread', 'critical', 'low', 'expiry'].map(f => (
+        {['all', 'unread', 'critical', 'low', 'expiry', 'requests', 'prescription'].map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -242,8 +245,120 @@ export default function Alerts() {
                       </div>
                     </>
 
-                  ) : (
+                  ) : a.alert_type === "prescription_upload" ? (
 
+                    <>
+                      <div className="flex justify-between items-start">
+
+                        <div className="flex gap-4">
+
+                          <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+                            <FileText className="text-indigo-600" size={22} />
+                          </div>
+
+                          <div>
+
+                            <div className="flex items-center gap-3">
+
+                              <h3 className="font-semibold text-lg">
+                                Prescription Uploaded
+                              </h3>
+
+                              {!isRead && (
+                                <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                                  Pending Review
+                                </span>
+                              )}
+
+                            </div>
+
+                            <p className="text-sm text-gray-400 mt-1">
+                              {createdAt}
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 mt-6 text-sm">
+
+                        <div className="flex items-center gap-2">
+                          <User size={16} />
+                          <span>
+                            {a.message.match(/Patient:\s*(.*)/)?.[1]}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <FileText size={16} />
+                          <span>
+                            {a.message.match(/File:\s*(.*)/)?.[1]}
+                          </span>
+                        </div>
+
+                      </div>
+
+                      <div className="flex justify-end gap-3 mt-6">
+
+                        {/* View File */}
+
+                        <button
+                          onClick={() => {
+
+                            const file =
+                              a.message.match(/File:\s*(.*)/)?.[1];
+
+                            window.open(
+                              `http://127.0.0.1:8000/uploads/prescriptions/${file}`,
+                              "_blank"
+                            );
+
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-indigo-300 text-indigo-600 hover:bg-indigo-50"
+                        >
+                          <FileText size={16} />
+                          View File
+                        </button>
+
+                        {/* Verify */}
+
+                        <button
+                          onClick={async () => {
+
+                            const prescriptionId =
+                              a.message.match(/Prescription ID:\s*(\d+)/)?.[1];
+
+                            try {
+
+                              await api.post(
+                                `/prescriptions/${prescriptionId}/verify`
+                              );
+
+                              const data =
+                                await api.get("/alerts");
+
+                              setAlerts(data);
+
+                            } catch (err) {
+
+                              setError(err.message);
+
+                            }
+
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <Check size={16} />
+                          Verify
+                        </button>
+
+                      </div>
+
+                    </>
+
+                  ) : (
                     <>
                       {/* OLD ALERT UI */}
 

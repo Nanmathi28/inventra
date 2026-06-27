@@ -1,9 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, medicines, inventory, suppliers, expiry, alerts, dashboard, forecast, restocking, analytics, portal, export, orders, restock_requests
+from app.api import auth, medicines, inventory, suppliers, expiry, alerts, dashboard, forecast, restocking, analytics, portal, export, orders, restock_requests, prescription
+from app.models.prescription import Prescription
 from app.config.settings import settings
 from app.database.connection import engine, Base
 import logging
+from fastapi.staticfiles import StaticFiles
+
+from fastapi.staticfiles import StaticFiles
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -24,6 +29,14 @@ app = FastAPI(
     title="Inventra API",
     description="Inventory Management System API",
     version="1.0.0"
+)
+
+os.makedirs("uploads/prescriptions", exist_ok=True)
+
+app.mount(
+    "/uploads",
+    StaticFiles(directory="uploads"),
+    name="uploads",
 )
 
 # CORS middleware configuration - Allow all origins for development
@@ -51,6 +64,7 @@ app.include_router(portal.router)
 app.include_router(export.router)
 app.include_router(orders.router)
 app.include_router(restock_requests.router)
+app.include_router(prescription.router)
 
 
 @app.get("/")

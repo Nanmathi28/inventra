@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 from datetime import datetime
+
 from app.models.alert import AlertType, AlertStatus
 
+from typing import Optional
 
 class AlertBase(BaseModel):
-    medicine_id: int
+    medicine_id: Optional[int] = None
     alert_type: AlertType
     message: str
 
@@ -19,7 +21,7 @@ class AlertUpdate(BaseModel):
 
 class AlertResponse(BaseModel):
     id: int
-    medicine_id: int
+    medicine_id: Optional[int] = None
     alert_type: AlertType
     message: str
     status: AlertStatus

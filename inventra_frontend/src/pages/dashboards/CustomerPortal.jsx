@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Sun, Moon, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../services/api';
+import {api, uploadPrescription, getPrescriptions} from "../../services/api";
 
 function StatusIcon({ status }) {
   if (status === 'healthy') return <CheckCircle size={15} className="text-green-500" />;
@@ -31,17 +31,19 @@ export default function CustomerPortal() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileName, setProfileName] = useState(user?.name || '');
   const [profileLoading, setProfileLoading] = useState(false);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     api.get('/portal')
       .then(data => setPortalData(data))
       .catch(err => setError(err.message || 'Could not load portal data'))
       .finally(() => setLoading(false));
+    getPrescriptions().then(setPrescriptions);
   }, []);
 
   const availabilityData = portalData?.available_medicines || [];
   const orders = portalData?.orders || [];
-  const prescriptions = portalData?.prescriptions || [];
 
   const handleOrderRequest = (medicine) => {
     setSelectedMedicine(medicine);
@@ -68,7 +70,7 @@ export default function CustomerPortal() {
       const medicines = await api.get('/medicines');
       const medicine = medicines.find(m => m.id === selectedMedicine.medicine_id);
       const price = medicine?.price || 0;
-      
+
       await api.post('/orders', {
         items: [{
           medicine_id: selectedMedicine.medicine_id,
@@ -114,11 +116,33 @@ export default function CustomerPortal() {
     }
   };
 
-  const filtered = availabilityData.filter(m => 
+  const filtered = availabilityData.filter(m =>
     m.medicine_name.toLowerCase().includes(search.toLowerCase())
   );
 
   function handleLogout() { logout(); navigate('/'); }
+
+  const handlePrescriptionUpload = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    try {
+      setUploading(true);
+
+      await uploadPrescription(file);
+
+      const updated = await getPrescriptions();
+
+      setPrescriptions(updated);
+
+      alert("Prescription uploaded successfully.");
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -174,7 +198,7 @@ export default function CustomerPortal() {
             <p className="text-purple-200 text-sm mt-1">{user?.title} · ID: {user?.id}</p>
             <div className="flex gap-4 mt-4 text-xs">
               <span className="bg-white/15 px-3 py-1 rounded-full">{orders.length} Past Orders</span>
-              <span className="bg-white/15 px-3 py-1 rounded-full">{prescriptions.filter(p => p.valid).length} Active Prescriptions</span>
+              <span className="bg-white/15 px-3 py-1 rounded-full">{prescriptions.filter(p => p.status === "Approved").length} Active Prescriptions</span>
             </div>
           </div>
         </motion.div>
@@ -183,7 +207,7 @@ export default function CustomerPortal() {
         <div className="grid grid-cols-3 gap-3">
           {[
             { icon: Package, label: 'Available Medicines', value: filtered.filter(m => m.available).length, color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' },
-            { icon: FileText, label: 'Active Prescriptions', value: prescriptions.filter(p => p.valid).length, color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' },
+            {icon: FileText, label: 'Active Prescriptions', value: prescriptions.filter(p => p.status === "Approved").length, color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' },
             { icon: Clock, label: 'Total Orders', value: orders.length, color: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20' },
           ].map((s, i) => {
             const Icon = s.icon;
@@ -284,33 +308,63 @@ export default function CustomerPortal() {
         )}
 
         {tab === 'prescriptions' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+
+            <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl cursor-pointer hover:bg-blue-700 transition-colors">
+              {uploading ? "Uploading..." : "Upload Prescription"}
+
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                hidden
+                onChange={handlePrescriptionUpload}
+              />
+            </label>
+
             {prescriptions.length === 0 ? (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                No prescriptions available.
+                No prescriptions uploaded.
               </div>
             ) : (
-              prescriptions.map((p, i) => (
-                <div key={i} className={`bg-white dark:bg-gray-800/90 border rounded-2xl p-5 ${p.valid ? 'border-emerald-200 dark:border-emerald-700/50' : 'border-gray-200 dark:border-gray-700 opacity-60'}`}>
-                  <div className="flex items-start justify-between gap-3">
+              prescriptions.map((p) => (
+                <div
+                  key={p.id}
+                  className="bg-white dark:bg-gray-800 border rounded-2xl p-5 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+
                     <div>
-                      <p className="font-semibold text-gray-800 dark:text-gray-100">{p.id}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Prescribed by {p.doctor}</p>
-                      <p className="text-xs text-gray-400 mt-1">{p.medicines}</p>
-                      <p className="text-xs text-gray-400 mt-1">Date: {p.date}</p>
+                      <h3 className="font-semibold text-gray-800 dark:text-white">
+                        {p.file_name}
+                      </h3>
+
+                      <p className="text-sm text-gray-500 mt-1">
+                        Uploaded:
+                        {" "}
+                        {new Date(p.uploaded_at).toLocaleDateString()}
+                      </p>
                     </div>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ${p.valid ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}>
-                      {p.valid ? 'Active' : 'Expired'}
+
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${p.status === "Pending"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : p.status === "Approved"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                    >
+                      {p.status}
                     </span>
+
                   </div>
-                  {p.valid && (
-                    <button className="mt-3 w-full py-2 border border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors flex items-center justify-center gap-2">
-                      Fill Prescription <ChevronRight size={14} />
-                    </button>
-                  )}
                 </div>
               ))
             )}
+
           </motion.div>
         )}
       </div>

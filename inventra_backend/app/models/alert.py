@@ -10,6 +10,7 @@ class AlertType(str, enum.Enum):
     CRITICAL_STOCK = "critical_stock"
     NEAR_EXPIRY = "near_expiry"
     PATIENT_REQUEST = "patient_request"
+    PRESCRIPTION_UPLOAD = "prescription_upload"
 
 
 class AlertStatus(str, enum.Enum):
@@ -18,11 +19,12 @@ class AlertStatus(str, enum.Enum):
     DISMISSED = "dismissed"
 
 
+
 class Alert(Base):
     __tablename__ = "alerts"
     
     id = Column(Integer, primary_key=True, index=True)
-    medicine_id = Column(Integer, ForeignKey("medicines.id"), nullable=False)
+    medicine_id = Column( Integer, ForeignKey("medicines.id"), nullable=True )
     alert_type = Column(String, nullable=False)
     message = Column(Text, nullable=False)
     status = Column(String, default=AlertStatus.ACTIVE, nullable=False)

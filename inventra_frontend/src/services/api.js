@@ -96,3 +96,31 @@ export const api = {
   delete: path => request(path, { method: 'DELETE' }),
   del: path => request(path, { method: 'DELETE' }),
 };
+
+export async function uploadPrescription(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const token = localStorage.getItem("inventra_token");
+
+  const response = await fetch(
+    `${API_BASE_URL}/prescriptions/upload`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }
+  );
+
+  return parseResponse(
+    response,
+    `${API_BASE_URL}/prescriptions/upload`,
+    "Upload Prescription"
+  );
+}
+
+export async function getPrescriptions() {
+  return api.get("/prescriptions");
+}
