@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from app.models.user import UserRole
-
+from pydantic import BaseModel
 
 class UserBase(BaseModel):
     full_name: str
@@ -36,3 +36,7 @@ class AuthResponse(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str

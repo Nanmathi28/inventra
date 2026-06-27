@@ -124,3 +124,7 @@ export async function uploadPrescription(file) {
 export async function getPrescriptions() {
   return api.get("/prescriptions");
 }
+
+export const changePassword = (data) =>
+  api.put("/auth/change-password", data);
+

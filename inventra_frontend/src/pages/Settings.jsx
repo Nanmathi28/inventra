@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, User, Bell, Shield, Palette, Database, CheckCircle, Camera } from 'lucide-react';
+import { Save, User, Shield, Palette, CheckCircle, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { SectionCard } from '../components/ui';
 import { api } from '../services/api';
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+
 function Toggle({ checked, onChange, label, desc }) {
   return (
     <div className="flex items-center justify-between py-3.5 border-b border-gray-100 dark:border-gray-700/60 last:border-0">
@@ -54,7 +55,7 @@ export default function Settings() {
   const [errors, setErrors] = useState({});
   // Profile state - pre-fill from logged in user
   const [profile, setProfile] = useState({
-    name: user?.name || '',
+    name: user?.full_name || '',
     email: user?.email || '',
     phone: user?.phone || '',
     title: user?.title || '',
@@ -69,6 +70,52 @@ export default function Settings() {
   // Security
   const [passwords, setPasswords] = useState({ current: '', newPw: '', confirm: '' });
   const [pwError, setPwError] = useState('');
+
+  const handlePasswordChange = async () => {
+
+    setPwError("");
+
+    if (!passwords.current.trim()) {
+      setPwError("Current password is required.");
+      return;
+    }
+
+    if (!passwords.newPw.trim()) {
+      setPwError("New password is required.");
+      return;
+    }
+
+    if (passwords.newPw.length < 8) {
+      setPwError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (passwords.newPw !== passwords.confirm) {
+      setPwError("Passwords do not match.");
+      return;
+    }
+
+    try {
+
+      await api.put("/auth/change-password", {
+        current_password: passwords.current,
+        new_password: passwords.newPw,
+      });
+
+      alert("Password updated successfully.");
+
+      setPasswords({
+        current: "",
+        newPw: "",
+        confirm: "",
+      });
+
+    } catch (err) {
+      setPwError(
+        err.message || "Failed to update password."
+      );
+    }
+  };
 
   function showToast(msg) {
     setToast(msg);
@@ -95,67 +142,15 @@ export default function Settings() {
       return;
     }
 
-    // License is required
-    if (!profile.license.trim()) {
-      setErrors({
-        license: "License Number is required."
-      });
-      return;
-    }
-
-    // Phone is required
-    if (!profile.phone.trim()) {
-      setErrors({
-        phone: "Phone Number is required."
-      });
-      return;
-    }
-
-    // Phone validation
-    if (!isValidPhoneNumber(profile.phone)) {
-      setErrors({
-        phone: "Enter a valid phone number."
-      });
-      return;
-    }
-
-    // Specialization Validation
-    if (!profile.specialization.trim()) {
-      setErrors({
-        specialization: "Specialization is required."
-      });
-      return;
-    }
-
-    {
-      errors.specialization && (
-        <p className="text-red-500 text-xs mt-1">
-          {errors.specialization}
-        </p>
-      )
-    }
-
-    if (!profile.experience.trim()) {
-      setErrors({
-        experience: "Years of Experience is required."
-      });
-      return;
-    }
-
     setSaving(true);
 
     try {
-      await api.put("/auth/profile", {
-        full_name: profile.name,
-        phone: profile.phone,
-        license: profile.license,
-        title: profile.title,
-        department: profile.department,
-        specialization: profile.specialization,
-        experience: profile.experience,
-        location: profile.location,
-        bio: profile.bio,
+      updateProfile({
+        ...user,
+        full_name: profile.name
       });
+
+      showToast("Profile updated successfully");
 
     } catch (err) {
 
@@ -181,18 +176,6 @@ export default function Settings() {
     showToast('Notification preferences saved');
   }
 
-  async function changePassword() {
-    setPwError('');
-    if (!passwords.current) { setPwError('Enter your current password.'); return; }
-    if (passwords.newPw.length < 6) { setPwError('New password must be at least 6 characters.'); return; }
-    if (passwords.newPw !== passwords.confirm) { setPwError('Passwords do not match.'); return; }
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 700));
-    setSaving(false);
-    setPasswords({ current: '', newPw: '', confirm: '' });
-    showToast('Password changed successfully');
-  }
-
   const roleColors = { admin: 'from-blue-500 to-blue-700', pharmacist: 'from-emerald-500 to-emerald-700', customer: 'from-purple-500 to-purple-700' };
   const roleLabels = { admin: 'Administrator', pharmacist: 'Senior Pharmacist', customer: 'Registered Patient' };
 
@@ -209,7 +192,7 @@ export default function Settings() {
           <div className="glass-card p-2 space-y-0.5">
             {TABS.map(t => {
               const Icon = t.icon;
-              const allowed = user?.role === 'admin' || ['profile', 'notifications', 'security', 'appearance'].includes(t.id);
+              const allowed = user?.role === 'admin' || ['profile', 'security', 'appearance'].includes(t.id);
               if (!allowed && t.id === 'thresholds' && user?.role !== 'admin' && user?.role !== 'pharmacist') return null;
               return (
                 <button key={t.id} onClick={() => setTab(t.id)}
@@ -226,9 +209,12 @@ export default function Settings() {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <AnimatePresence mode="wait">
+
             {tab === 'profile' && (
               <motion.div key="profile" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="space-y-5">
+
                 {/* Profile card */}
+
                 <SectionCard>
                   <div className="flex items-center gap-5 pb-5 border-b border-gray-100 dark:border-gray-700 mb-5">
                     <div className="relative group cursor-pointer">
@@ -239,6 +225,7 @@ export default function Settings() {
                         <Camera size={18} className="text-white" />
                       </div>
                     </div>
+
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white">{profile.name}</h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400">{roleLabels[user?.role]}</p>
@@ -247,20 +234,17 @@ export default function Settings() {
                           {user?.role?.toUpperCase()}
                         </span>
                         <span className="text-xs text-gray-400">ID: {user?.id}</span>
-                        <span className="text-xs text-gray-400">License: {profile.license}</span>
                       </div>
                     </div>
+                    
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
                       { key: "name", label: "Full Name", type: "text", required: true },
                       { key: "email", label: "Email Address", type: "email", required: true },
-                      { key: "phone", label: "Phone Number", type: "tel", required: true },
-                      { key: "license", label: "License Number", type: "text", required: true },
-                      { key: "title", label: "Professional Title", type: "text" },
-                      { key: "department", label: "Department", type: "text" },
-                      { key: "experience", label: "Years of Experience", type: "text", required: true },
+                      { key: "phone", label: "Phone Number", type: "tel", required: false },
+                      { key: "specialization", label: "Specialization", type: "text", required: false }
 
                     ].map(f => (
                       <div key={f.key}>
@@ -321,26 +305,6 @@ export default function Settings() {
 
                       </div>
                     ))}
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                        Specialization
-                        <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <input value={profile.specialization} onChange={e => setProfile(p => ({ ...p, specialization: e.target.value }))} className="input-field" />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Professional Bio</label>
-                      <textarea
-                        rows={3}
-                        value={profile.bio}
-                        onChange={e => setProfile(p => ({ ...p, bio: user?.bio || "" }))}
-                        className="input-field resize-none"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Location / Hospital</label>
-                      <input value={profile.location} onChange={e => setProfile(p => ({ ...p, location: e.target.value }))} className="input-field" />
-                    </div>
                   </div>
                   <div className="flex justify-end mt-5">
                     <button onClick={saveProfile} disabled={saving}
@@ -356,11 +320,7 @@ export default function Settings() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {[
                       { label: "Role", value: roleLabels[user?.role] },
-                      { label: "License Number", value: profile.license },
-                      { label: "Department", value: profile.department },
                       { label: "Specialization", value: profile.specialization },
-                      { label: "Experience", value: profile.experience },
-                      { label: "Hospital", value: profile.location },
                     ].map((item, i) => (
                       <div key={i} className="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
                         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{item.label}</p>
@@ -372,7 +332,7 @@ export default function Settings() {
               </motion.div>
             )}
 
-            {activeTab === "security" && (
+            {tab === "security" && (
 
               <SectionCard title="Security">
 
@@ -384,7 +344,14 @@ export default function Settings() {
 
                     <input
                       type="password"
-                      className="input"
+                      value={passwords.current}
+                      onChange={(e) =>
+                        setPasswords({
+                          ...passwords,
+                          current: e.target.value
+                        })
+                      }
+                      className="input-field"
                     />
 
                   </div>
@@ -395,7 +362,14 @@ export default function Settings() {
 
                     <input
                       type="password"
-                      className="input"
+                      value={passwords.newPw}
+                      onChange={(e) =>
+                        setPasswords({
+                          ...passwords,
+                          newPw: e.target.value
+                        })
+                      }
+                      className="input-field"
                     />
 
                   </div>
@@ -406,12 +380,26 @@ export default function Settings() {
 
                     <input
                       type="password"
-                      className="input"
+                      value={passwords.confirm}
+                      onChange={(e) =>
+                        setPasswords({
+                          ...passwords,
+                          confirm: e.target.value
+                        })
+                      }
+                      className="input-field"
                     />
 
                   </div>
 
+                  {pwError && (
+                    <p className="text-red-500 text-sm mt-2">
+                      {pwError}
+                    </p>
+                  )}
+
                   <button
+                    onClick={handlePasswordChange}
                     className="btn-primary"
                   >
                     Update Password
@@ -423,7 +411,7 @@ export default function Settings() {
 
             )}
 
-            {activeTab === "appearance" && (
+            {tab === "appearance" && (
               <SectionCard title="Appearance">
                 <div className="space-y-6">
 
@@ -446,7 +434,12 @@ export default function Settings() {
 
                       <button
                         onClick={() => {
-                          document.documentElement.classList.add("dark");
+                          <Toggle
+                            checked={dark}
+                            onChange={toggle}
+                            label="Dark Mode"
+                            desc="Switch between light and dark mode."
+                          />
                           localStorage.setItem("theme", "dark");
                         }}
                         className="btn-secondary"

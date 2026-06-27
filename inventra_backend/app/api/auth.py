@@ -7,6 +7,8 @@ from app.schemas.user import UserCreate, UserResponse, AuthResponse
 from app.auth.password_handler import hash_password, verify_password
 from app.auth.jwt_handler import create_access_token
 from app.auth.dependencies import get_current_user
+from app.schemas.user import ChangePasswordRequest
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -103,22 +105,34 @@ def get_profile(current_user: User = Depends(get_current_user)):
     logger.info(f"Profile request for user: {current_user.email}")
     return current_user
 
-
 @router.put("/profile", response_model=UserResponse)
 def update_profile(
-    full_name: str = None,
+    full_name: str,
+    email: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Update user profile (currently supports full_name only).
-    """
-    logger.info(f"Profile update request for user: {current_user.email}")
-    
-    if full_name:
-        current_user.full_name = full_name
-        db.commit()
-        db.refresh(current_user)
-        logger.info(f"Profile updated successfully for user: {current_user.email}")
-    
+
+    # Check if another user already uses this email
+    existing = (
+        db.query(User)
+        .filter(
+            User.email == email,
+            User.id != current_user.id
+        )
+        .first()
+    )
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already exists"
+        )
+
+    current_user.full_name = full_name
+    current_user.email = email.lower()
+
+    db.commit()
+    db.refresh(current_user)
+
     return current_user
