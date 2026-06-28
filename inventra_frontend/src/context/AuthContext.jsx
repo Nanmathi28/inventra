@@ -4,33 +4,39 @@ import { loginRequest, registerRequest, api } from '../services/api';
 const AuthContext = createContext();
 
 function buildUserObject(profile) {
+
   const name = profile.full_name || profile.email;
+
   const initials = name
-    .split(' ')
+    .split(" ")
     .filter(Boolean)
     .slice(0, 2)
-    .map(p => p[0])
-    .join('')
+    .map(x => x[0])
+    .join("")
     .toUpperCase();
-  const roleTitles = {
-    admin: 'Administrator',
-    pharmacist: 'Senior Pharmacist',
-    customer: 'Registered Patient',
-  };
+
   return {
-    id: profile.id,
+
+    ...profile,
+
     name,
-    email: profile.email,
-    role: profile.role,
-    title: roleTitles[profile.role] || 'Team Member',
+
     avatar: initials,
+
     avatarColor:
-      profile.role === 'admin'
-        ? 'from-blue-500 to-blue-700'
-        : profile.role === 'pharmacist'
-        ? 'from-emerald-500 to-emerald-700'
-        : 'from-purple-500 to-purple-700',
+
+      profile.role === "admin"
+
+        ? "from-blue-500 to-blue-700"
+
+        : profile.role === "pharmacist"
+
+          ? "from-emerald-500 to-emerald-700"
+
+          : "from-purple-500 to-purple-700"
+
   };
+
 }
 
 export function AuthProvider({ children }) {
@@ -103,12 +109,12 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
-  function updateProfile(updates) {
-    setUser(u => {
-      const updated = { ...u, ...updates };
-      localStorage.setItem('inventra_user', JSON.stringify(updated));
-      return updated;
-    });
+  function updateProfile(profile) {
+    const updated = buildUserObject(profile);
+
+    localStorage.setItem("inventra_user", JSON.stringify(updated));
+
+    setUser(updated);
   }
 
   function markRead(id) {

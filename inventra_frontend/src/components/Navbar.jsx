@@ -45,13 +45,6 @@ export default function Navbar({ onMenuClick }) {
         <Menu size={20} />
       </button>
 
-      {/* Search */}
-      {/* <div className="flex-1 max-w-md relative hidden sm:block">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input type="text" placeholder="Search medicines, suppliers…"
-          className="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-gray-700 dark:text-gray-200 placeholder-gray-400" />
-      </div> */}
-
       <div className="ml-auto flex items-center gap-1.5">
         {/* Dark mode */}
         <button onClick={toggle} className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
@@ -105,7 +98,7 @@ export default function Navbar({ onMenuClick }) {
               {user?.avatar}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 leading-tight">{user?.name?.split(' ').slice(0,2).join(' ')}</p>
+              <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 leading-tight">{user?.full_name || user?.name?.split(' ').slice(0,2).join(' ')}</p>
               <p className="text-[10px] text-gray-400 leading-tight capitalize">{user?.role}</p>
             </div>
             <ChevronDown size={12} className="text-gray-400 hidden sm:block" />
@@ -130,11 +123,11 @@ export default function Navbar({ onMenuClick }) {
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <div className="bg-gray-50 dark:bg-gray-700/60 rounded-lg px-2.5 py-2">
                     <p className="text-[9px] text-gray-400 uppercase tracking-wider">Title</p>
-                    <p className="font-medium text-gray-700 dark:text-gray-300 mt-0.5 text-[11px] leading-tight">{user?.title}</p>
+                    <p className="font-medium text-gray-700 dark:text-gray-300 mt-0.5 text-[11px] leading-tight">{user?.role}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-700/60 rounded-lg px-2.5 py-2">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider">Experience</p>
-                    <p className="font-medium text-gray-700 dark:text-gray-300 mt-0.5 text-[11px]">{user?.experience}</p>
+                    <p className="text-[9px] text-gray-400 uppercase tracking-wider">Specialization</p>
+                    <p className="font-medium text-gray-700 dark:text-gray-300 mt-0.5 text-[11px]">{user?.specialization}</p>
                   </div>
                 </div>
               </div>

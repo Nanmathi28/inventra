@@ -8,6 +8,7 @@ from app.auth.password_handler import hash_password, verify_password
 from app.auth.jwt_handler import create_access_token
 from app.auth.dependencies import get_current_user
 from app.schemas.user import ChangePasswordRequest
+from app.schemas.user import UpdateProfileRequest
 
 import logging
 
@@ -105,34 +106,50 @@ def get_profile(current_user: User = Depends(get_current_user)):
     logger.info(f"Profile request for user: {current_user.email}")
     return current_user
 
+
 @router.put("/profile", response_model=UserResponse)
 def update_profile(
-    full_name: str,
-    email: str,
+    profile: UpdateProfileRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
 
-    # Check if another user already uses this email
-    existing = (
-        db.query(User)
-        .filter(
-            User.email == email,
-            User.id != current_user.id
-        )
-        .first()
-    )
-
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already exists"
-        )
-
-    current_user.full_name = full_name
-    current_user.email = email.lower()
+    current_user.full_name = profile.full_name
+    current_user.phone = profile.phone
+    current_user.specialization = profile.specialization
 
     db.commit()
     db.refresh(current_user)
 
     return current_user
+
+@router.put("/change-password")
+def change_password(
+    password_data: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Change the logged-in user's password.
+    """
+
+    # Verify current password
+    if not verify_password(
+        password_data.current_password,
+        current_user.password_hash,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+
+    # Hash new password
+    current_user.password_hash = hash_password(
+        password_data.new_password
+    )
+
+    db.commit()
+
+    return {
+        "message": "Password updated successfully"
+    }

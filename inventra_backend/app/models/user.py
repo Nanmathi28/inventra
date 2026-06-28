@@ -19,3 +19,5 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     role = Column(Enum(UserRole, name='userrole'), default=UserRole.CUSTOMER, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    phone = Column(String, nullable=True)
+    specialization = Column(String, nullable=True)

@@ -14,14 +14,16 @@ class UserCreate(UserBase):
 
 
 class UserResponse(BaseModel):
-    id: int
-    full_name: str
-    email: str
-    role: UserRole
-    created_at: datetime
-    
+    id:int
+    full_name:str
+    email:str
+    role:UserRole
+    phone:str | None = None
+    specialization:str | None = None
+    created_at:datetime
+
     class Config:
-        from_attributes = True
+        from_attributes=True
 
 
 class AuthResponse(BaseModel):
@@ -40,3 +42,8 @@ class UserLogin(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+    
+class UpdateProfileRequest(BaseModel):
+    full_name: str
+    phone: str | None = None
+    specialization: str | None = None

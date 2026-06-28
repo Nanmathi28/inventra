@@ -47,7 +47,7 @@ const TABS = [
 
 export default function Settings() {
   const { user, updateProfile } = useAuth();
-  const { dark, toggle } = useTheme();
+  const { dark, setDark } = useTheme();
 
   const [tab, setTab] = useState('profile');
   const [toast, setToast] = useState(null);
@@ -58,13 +58,7 @@ export default function Settings() {
     name: user?.full_name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    title: user?.title || '',
-    department: user?.department || '',
     specialization: user?.specialization || '',
-    experience: user?.experience || '',
-    license: user?.license || '',
-    location: user?.location || '',
-    bio: user?.bio || '',
   });
 
   // Security
@@ -145,16 +139,20 @@ export default function Settings() {
     setSaving(true);
 
     try {
-      updateProfile({
-        ...user,
-        full_name: profile.name
+
+      const updatedUser = await api.put("/auth/profile", {
+        full_name: profile.name,
+        phone: profile.phone,
+        specialization: profile.specialization,
       });
+
+      updateProfile(updatedUser);
 
       showToast("Profile updated successfully");
 
     } catch (err) {
 
-      showToast("Failed to update profile");
+      showToast(err.message || "Failed to update profile");
 
     } finally {
 
@@ -236,7 +234,7 @@ export default function Settings() {
                         <span className="text-xs text-gray-400">ID: {user?.id}</span>
                       </div>
                     </div>
-                    
+
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -423,28 +421,17 @@ export default function Settings() {
                     <div className="flex gap-3">
 
                       <button
-                        onClick={() => {
-                          document.documentElement.classList.remove("dark");
-                          localStorage.setItem("theme", "light");
-                        }}
-                        className="btn-secondary"
+                        onClick={() => setDark(true)}
+                        className={`btn-secondary ${dark ? "bg-gray-800 text-white" : ""}`}
                       >
-                        ☀ Light
+                        🌙 Dark
                       </button>
 
                       <button
-                        onClick={() => {
-                          <Toggle
-                            checked={dark}
-                            onChange={toggle}
-                            label="Dark Mode"
-                            desc="Switch between light and dark mode."
-                          />
-                          localStorage.setItem("theme", "dark");
-                        }}
-                        className="btn-secondary"
+                        onClick={() => setDark(false)}
+                        className={`btn-secondary ${!dark ? "bg-blue-600 text-white" : ""}`}
                       >
-                        🌙 Dark
+                        ☀ Light
                       </button>
 
                     </div>
@@ -465,6 +452,6 @@ export default function Settings() {
       <AnimatePresence>
         {toast && <Toast message={toast} onDone={() => setToast(null)} />}
       </AnimatePresence>
-    </div>
+    </div >
   );
 } 
