@@ -5,6 +5,7 @@ from app.database.connection import get_db
 from app.models.restock_request import RestockRequest, RestockStatus
 from app.models.medicine import Medicine
 from app.models.supplier import Supplier
+from app.models.inventory import Inventory
 from app.schemas.restock_request import RestockRequestCreate, RestockRequestUpdate, RestockRequestResponse
 from app.auth.dependencies import get_current_user
 from app.models.user import User
@@ -83,3 +84,50 @@ def delete_restock_request(
     
     db.delete(db_request)
     db.commit()
+
+@router.put("/{request_id}/accept", response_model=RestockRequestResponse)
+def accept_restock_request(
+    request_id: int,
+    db: Session = Depends(get_db)
+):
+    db_request = db.query(RestockRequest).filter(
+        RestockRequest.id == request_id
+    ).first()
+
+    if not db_request:
+        raise HTTPException(
+            status_code=404,
+            detail="Restock request not found"
+        )
+
+    db_request.status = RestockStatus.ORDERED
+
+    db.commit()
+    db.refresh(db_request)
+
+    return db_request
+@router.put("/{request_id}/complete", response_model=RestockRequestResponse)
+def complete_restock_request(
+    request_id: int,
+    db: Session = Depends(get_db)
+):
+    db_request = db.query(RestockRequest).filter(RestockRequest.id == request_id).first()
+
+    if not db_request:
+        raise HTTPException(status_code=404, detail="Restock request not found")
+
+    inventory = (
+        db.query(Inventory)
+        .filter(Inventory.medicine_id == db_request.medicine_id)
+        .first()
+    )
+
+    if inventory:
+        inventory.current_stock += db_request.requested_quantity
+
+    db_request.status = RestockStatus.COMPLETED
+
+    db.commit()
+    db.refresh(db_request)
+
+    return db_request

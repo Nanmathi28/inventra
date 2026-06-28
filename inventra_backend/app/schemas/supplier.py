@@ -25,6 +25,9 @@ class SupplierUpdate(BaseModel):
 
 class SupplierResponse(SupplierBase):
     id: int
-    
+
+    # NEW FIELD
+    pending_orders: int = 0
+
     class Config:
         from_attributes = True

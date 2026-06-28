@@ -37,7 +37,7 @@ class OrderItem(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
-    medicine_id = Column(Integer, ForeignKey("medicines.id"), nullable=False)
+    medicine_id = Column(Integer, ForeignKey("medicines.id"), nullable=True)
     quantity = Column(Integer, nullable=False)
     price = Column(Float, nullable=False)
     subtotal = Column(Float, nullable=False)

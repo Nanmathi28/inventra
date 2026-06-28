@@ -227,8 +227,10 @@ export default function Suppliers() {
                     <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{s.address || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-400">Status</p>
-                    <p className="text-sm font-semibold text-green-600">Active</p>
+                    <p className="text-[10px] text-gray-400">Pending Orders</p>
+                    <p className="text-sm font-semibold text-amber-600">
+                      {s.pending_orders}
+                    </p>
                   </div>
                 </div>
 

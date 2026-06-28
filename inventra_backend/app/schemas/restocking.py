@@ -10,7 +10,7 @@ class RestockItem(BaseModel):
     recommended_reorder_qty: int
     priority_level: str
     supplier_name: str
-
+    order_status: str
 
 class RestockResponse(BaseModel):
     recommendations: list[RestockItem]

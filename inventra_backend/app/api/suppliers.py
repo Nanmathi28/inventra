@@ -3,18 +3,45 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.database.connection import get_db
 from app.models.supplier import Supplier
+from app.models.restock_request import RestockRequest
 from app.schemas.supplier import SupplierCreate, SupplierUpdate, SupplierResponse
 from app.auth.dependencies import get_current_user
 from app.models.user import User
-
 router = APIRouter(prefix="/suppliers", tags=["Suppliers"])
 
 
 @router.get("", response_model=List[SupplierResponse])
-def get_suppliers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_suppliers(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
     suppliers = db.query(Supplier).offset(skip).limit(limit).all()
+
+    for supplier in suppliers:
+        supplier.pending_orders = (
+            db.query(RestockRequest)
+            .filter(
+                RestockRequest.supplier_id == supplier.id,
+                RestockRequest.status == "pending"
+            )
+            .count()
+        )
+
     return suppliers
 
+@router.get("/{supplier_id}/orders")
+def get_supplier_orders(
+    supplier_id: int,
+    db: Session = Depends(get_db)
+):
+    orders = (
+        db.query(RestockRequest)
+        .filter(RestockRequest.supplier_id == supplier_id)
+        .all()
+    )
+
+    return orders
 
 @router.post("", response_model=SupplierResponse, status_code=status.HTTP_201_CREATED)
 def create_supplier(
