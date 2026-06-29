@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 💊 Inventra – AI-Powered Smart Pharmacy Inventory Management System
 =======
 # 💊 Inventra – AI-Powered Smart Pharmacy Inventory Management System
@@ -7,7 +7,7 @@
 Inventra is a full-stack Smart Pharmacy Inventory Management System designed to help pharmacies efficiently manage medicines, inventory, suppliers, stock levels, expiry monitoring, and AI-powered demand forecasting.
 
 The application provides a modern React-based web interface, a FastAPI backend, PostgreSQL database, and machine learning capabilities for smarter inventory decisions.
-<<<<<<< HEAD
+
 
 ---
 
