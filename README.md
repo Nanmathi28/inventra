@@ -259,22 +259,6 @@ SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 
 ACCESS_TOKEN_EXPIRE_MINUTES=60
-```
-
----
-
-# 📷 Screenshots
-
-*Add screenshots of the following pages:*
-
-* Landing Page
-* Login Page
-* Dashboard
-* Inventory Management
-* Medicine Management
-* Forecast Dashboard
-* Alerts
-* Prescription Upload
 
 ---
 
