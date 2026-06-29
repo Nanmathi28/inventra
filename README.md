@@ -1,154 +1,279 @@
-# Inventra
+💊 Inventra – AI-Powered Smart Pharmacy Inventory Management System
 
-Inventra is a Smart Pharmacy Inventory Management System designed to help pharmacies efficiently manage medicines, inventory, suppliers, stock levels, and expiry monitoring.
+Inventra is a full-stack Smart Pharmacy Inventory Management System designed to help pharmacies efficiently manage medicines, inventory, suppliers, stock levels, expiry monitoring, and AI-powered demand forecasting.
 
-The system provides a modern web interface for inventory management along with a FastAPI-powered backend and PostgreSQL database.
-
-## Features
-
-### Authentication & User Management
-
-* User Registration and Login
-* JWT Authentication
-* Role-Based Access Control
-
-  * Admin
-  * Pharmacist
-  * Customer
-
-### Inventory Management
-
-* Medicine Inventory Tracking
-* Stock Monitoring
-* Reorder Level Management
-* Low Stock Alerts
-
-### Medicine Management
-
-* Add, Update, Delete Medicines
-* Batch Tracking
-* Manufacturer Details
-* Expiry Date Monitoring
-
-### Supplier Management
-
-* Manage Supplier Information
-* Contact Details Tracking
-* Supplier Database
-
-### Alerts & Notifications
-
-* Low Stock Alerts
-* Critical Stock Alerts
-* Expiry Alerts
-
-### Dashboard Analytics
-
-* Total Medicines
-* Inventory Overview
-* Supplier Statistics
-* Expiry Monitoring Summary
+The application provides a modern React-based web interface, a FastAPI backend, PostgreSQL database, and machine learning capabilities for smarter inventory decisions.
 
 ---
 
-## Tech Stack
+🚀 Live Demo
 
-### Frontend
+Frontend
 
-* React.js
-* Vite
-* Tailwind CSS
-* React Router
+https://inventra-nanmathi.vercel.app
 
-### Backend
+Backend API
 
-* FastAPI
-* SQLAlchemy
-* PostgreSQL
-* Alembic
-* JWT Authentication
+https://inventra-api-n1ae.onrender.com
+
+API Documentation (Swagger)
+
+https://inventra-api-n1ae.onrender.com/docs
 
 ---
 
-## Project Structure
+✨ Features
 
-inventra-v2/
+🔐 Authentication & User Management
 
+- User Registration & Login
+- JWT Authentication
+- Secure Password Hashing
+- Role-Based Access Control
+
+Roles:
+
+- Admin
+- Pharmacist
+- Customer
+
+---
+
+💊 Medicine Management
+
+- Add Medicines
+- Update Medicines
+- Delete Medicines
+- Medicine Categories
+- Manufacturer Details
+- Medicine Form
+- Batch Tracking
+- Price Management
+- Expiry Date Monitoring
+
+---
+
+📦 Inventory Management
+
+- Real-Time Inventory Tracking
+- Current Stock Monitoring
+- Safety Stock Management
+- Reorder Level Management
+- Stock Status Monitoring
+- Batch-wise Inventory
+
+---
+
+🚚 Supplier Management
+
+- Supplier Database
+- Contact Information
+- Supplier Reliability Score
+- Supplier Details Management
+
+---
+
+📢 Alerts & Notifications
+
+- Low Stock Alerts
+- Critical Stock Alerts
+- Expiry Alerts
+- Inventory Notifications
+
+---
+
+🛒 Order Management
+
+- Customer Orders
+- Order Tracking
+- Order Status Management
+- Order History
+
+---
+
+📊 Dashboard & Analytics
+
+- Total Medicines
+- Inventory Overview
+- Supplier Statistics
+- Stock Distribution
+- Expiry Monitoring Summary
+
+---
+
+🤖 AI & Machine Learning
+
+- Demand Forecasting
+- Future Stock Prediction
+- Smart Inventory Recommendations
+- Forecast Dashboard
+- Historical Demand Analysis
+
+---
+
+📄 Prescription Management
+
+- Upload Prescriptions
+- Prescription Records
+- Medicine Request Tracking
+
+---
+
+🛠️ Tech Stack
+
+Frontend
+
+- React.js
+- Vite
+- Tailwind CSS
+- React Router
+- JavaScript
+
+---
+
+Backend
+
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Alembic
+- JWT Authentication
+- Pydantic
+
+---
+
+Machine Learning
+
+- Scikit-learn
+- Pandas
+- NumPy
+
+---
+
+Deployment
+
+- Frontend: Vercel
+- Backend: Render
+- Database: PostgreSQL
+
+---
+
+📁 Project Structure
+
+inventra/
+│
 ├── inventra_frontend/
-
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
 ├── inventra_backend/
-
+│   ├── alembic/
+│   ├── app/
+│   ├── data/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   ├── requirements.txt
+│   └── main.py
+│
 └── README.md
 
 ---
 
-## Installation
+⚙️ Installation
 
-### Backend Setup
+Clone Repository
 
-```bash
+git clone https://github.com/Nanmathi28/inventra.git
+
+cd inventra
+
+---
+
+Backend Setup
+
 cd inventra_backend
 
 python -m venv venv
 
+# Windows
 venv\Scripts\activate
+
+# Linux / macOS
+source venv/bin/activate
 
 pip install -r requirements.txt
 
-uvicorn main:app --reload
-```
+alembic upgrade head
 
-Backend runs on:
+uvicorn main:app --reload
+
+Backend runs at:
 
 http://127.0.0.1:8000
 
-Swagger Documentation:
+Swagger API Documentation:
 
 http://127.0.0.1:8000/docs
 
 ---
 
-### Frontend Setup
+Frontend Setup
 
-```bash
 cd inventra_frontend
 
 npm install
 
 npm run dev
-```
 
-Frontend runs on:
+Frontend runs at:
 
 http://localhost:5173
 
 ---
 
-## Database
+Database Configuration
 
-Database: PostgreSQL
+Create a ".env" file inside inventra_backend
 
-Update the `.env` file in the backend folder:
-
-```env
 DATABASE_URL=postgresql://username:password@localhost:5432/inventra_db
+
 SECRET_KEY=your_secret_key
-```
+
+ALGORITHM=HS256
+
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 ---
 
-## Future Enhancements
+🔮 Future Enhancements
 
-* Demand Forecasting using Machine Learning
-* Automated Restocking Recommendations
-* Advanced Inventory Analytics
-* Sales Trend Analysis
-* Pharmacy Performance Reports
+- Barcode Scanner Integration
+- OCR Prescription Recognition
+- Email Notifications
+- SMS Alerts
+- Mobile Application
+- Supplier Performance Analytics
+- Advanced AI Forecasting
+- Sales Analytics Dashboard
+- Multi-Branch Pharmacy Support
 
 ---
 
-## Authors
+👥 Team
 
-Arya Pandaram
-Nanmathi Balachandran
+- Nanmathi Balachandran
+- Arya Pandaram
 
+---
+
+📄 License
+
+This project was developed for educational, academic, and learning purposes.
+
+---
+
+⭐ Support
+
+If you found this project useful, consider giving it a ⭐ on GitHub!
