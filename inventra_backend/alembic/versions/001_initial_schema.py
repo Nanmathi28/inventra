@@ -21,8 +21,15 @@ def upgrade() -> None:
     op.execute("DROP TYPE IF EXISTS userrole CASCADE")
     
     # Create userrole enum
-    userrole_enum = postgresql.ENUM('ADMIN', 'PHARMACIST', 'CUSTOMER', name='userrole')
-    userrole_enum.create(op.get_bind())
+    userrole_enum = postgresql.ENUM(
+        'ADMIN',
+        'PHARMACIST',
+        'CUSTOMER',
+        name='userrole',
+        create_type=False
+    )
+
+    userrole_enum.create(op.get_bind(), checkfirst=True)
     
     # Create users table
     op.create_table('users',

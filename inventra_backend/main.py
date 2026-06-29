@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 # Create database tables when the app starts.
 # In production, prefer Alembic migrations rather than seeding fake users.
-Base.metadata.create_all(bind=engine)
-logger.info("Database tables created/verified")
+# Base.metadata.create_all(bind=engine)
+# logger.info("Database tables created/verified")
 
 app = FastAPI(
     title="Inventra API",

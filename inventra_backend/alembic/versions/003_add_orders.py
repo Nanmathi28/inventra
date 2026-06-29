@@ -19,8 +19,18 @@ depends_on = None
 def upgrade() -> None:
     # Create orderstatus enum (drop if exists)
     op.execute("DROP TYPE IF EXISTS orderstatus CASCADE")
-    orderstatus_enum = postgresql.ENUM('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', name='orderstatus')
-    orderstatus_enum.create(op.get_bind())
+    orderstatus_enum = postgresql.ENUM(
+        'pending',
+        'confirmed',
+        'processing',
+        'shipped',
+        'delivered',
+        'cancelled',
+        name='orderstatus',
+        create_type=False
+    )
+
+    orderstatus_enum.create(op.get_bind(), checkfirst=True)
     
     # Create orders table
     op.create_table('orders',
