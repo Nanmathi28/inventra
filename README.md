@@ -1,4 +1,4 @@
-💊 Inventra – AI-Powered Smart Pharmacy Inventory Management System
+# 💊 Inventra – AI-Powered Smart Pharmacy Inventory Management System
 
 Inventra is a full-stack Smart Pharmacy Inventory Management System designed to help pharmacies efficiently manage medicines, inventory, suppliers, stock levels, expiry monitoring, and AI-powered demand forecasting.
 
@@ -6,160 +6,161 @@ The application provides a modern React-based web interface, a FastAPI backend, 
 
 ---
 
-🚀 Live Demo
+# 🚀 Live Demo
 
-Frontend
+### Frontend
 
-https://inventra-nanmathi.vercel.app
+**https://inventra-nanmathi.vercel.app**
 
-Backend API
+### Backend API
 
-https://inventra-api-n1ae.onrender.com
+**https://inventra-api-n1ae.onrender.com**
 
-API Documentation (Swagger)
+### API Documentation (Swagger)
 
-https://inventra-api-n1ae.onrender.com/docs
+**https://inventra-api-n1ae.onrender.com/docs**
 
 ---
 
-✨ Features
+# ✨ Features
 
-🔐 Authentication & User Management
+## 🔐 Authentication & User Management
 
-- User Registration & Login
-- JWT Authentication
-- Secure Password Hashing
-- Role-Based Access Control
+* User Registration & Login
+* JWT Authentication
+* Secure Password Hashing
+* Role-Based Access Control
 
 Roles:
 
-- Admin
-- Pharmacist
-- Customer
+* Admin
+* Pharmacist
+* Customer
 
 ---
 
-💊 Medicine Management
+## 💊 Medicine Management
 
-- Add Medicines
-- Update Medicines
-- Delete Medicines
-- Medicine Categories
-- Manufacturer Details
-- Medicine Form
-- Batch Tracking
-- Price Management
-- Expiry Date Monitoring
-
----
-
-📦 Inventory Management
-
-- Real-Time Inventory Tracking
-- Current Stock Monitoring
-- Safety Stock Management
-- Reorder Level Management
-- Stock Status Monitoring
-- Batch-wise Inventory
+* Add Medicines
+* Update Medicines
+* Delete Medicines
+* Medicine Categories
+* Manufacturer Details
+* Medicine Form
+* Batch Tracking
+* Price Management
+* Expiry Date Monitoring
 
 ---
 
-🚚 Supplier Management
+## 📦 Inventory Management
 
-- Supplier Database
-- Contact Information
-- Supplier Reliability Score
-- Supplier Details Management
-
----
-
-📢 Alerts & Notifications
-
-- Low Stock Alerts
-- Critical Stock Alerts
-- Expiry Alerts
-- Inventory Notifications
+* Real-Time Inventory Tracking
+* Current Stock Monitoring
+* Safety Stock Management
+* Reorder Level Management
+* Stock Status Monitoring
+* Batch-wise Inventory
 
 ---
 
-🛒 Order Management
+## 🚚 Supplier Management
 
-- Customer Orders
-- Order Tracking
-- Order Status Management
-- Order History
-
----
-
-📊 Dashboard & Analytics
-
-- Total Medicines
-- Inventory Overview
-- Supplier Statistics
-- Stock Distribution
-- Expiry Monitoring Summary
+* Supplier Database
+* Contact Information
+* Supplier Reliability Score
+* Supplier Details Management
 
 ---
 
-🤖 AI & Machine Learning
+## 📢 Alerts & Notifications
 
-- Demand Forecasting
-- Future Stock Prediction
-- Smart Inventory Recommendations
-- Forecast Dashboard
-- Historical Demand Analysis
-
----
-
-📄 Prescription Management
-
-- Upload Prescriptions
-- Prescription Records
-- Medicine Request Tracking
+* Low Stock Alerts
+* Critical Stock Alerts
+* Expiry Alerts
+* Inventory Notifications
 
 ---
 
-🛠️ Tech Stack
+## 🛒 Order Management
 
-Frontend
-
-- React.js
-- Vite
-- Tailwind CSS
-- React Router
-- JavaScript
+* Customer Orders
+* Order Tracking
+* Order Status Management
+* Order History
 
 ---
 
-Backend
+## 📊 Dashboard & Analytics
 
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
-- Alembic
-- JWT Authentication
-- Pydantic
-
----
-
-Machine Learning
-
-- Scikit-learn
-- Pandas
-- NumPy
+* Total Medicines
+* Inventory Overview
+* Supplier Statistics
+* Stock Distribution
+* Expiry Monitoring Summary
 
 ---
 
-Deployment
+## 🤖 AI & Machine Learning
 
-- Frontend: Vercel
-- Backend: Render
-- Database: PostgreSQL
+* Demand Forecasting
+* Future Stock Prediction
+* Smart Inventory Recommendations
+* Forecast Dashboard
+* Historical Demand Analysis
 
 ---
 
-📁 Project Structure
+## 📄 Prescription Management
 
+* Upload Prescriptions
+* Prescription Records
+* Medicine Request Tracking
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
+* React.js
+* Vite
+* Tailwind CSS
+* React Router
+* JavaScript
+
+---
+
+## Backend
+
+* FastAPI
+* SQLAlchemy
+* PostgreSQL
+* Alembic
+* JWT Authentication
+* Pydantic
+
+---
+
+## Machine Learning
+
+* Scikit-learn
+* Pandas
+* NumPy
+
+---
+
+## Deployment
+
+* Frontend: Vercel
+* Backend: Render
+* Database: PostgreSQL
+
+---
+
+# 📁 Project Structure
+
+```text
 inventra/
 │
 ├── inventra_frontend/
@@ -178,21 +179,25 @@ inventra/
 │   └── main.py
 │
 └── README.md
+```
 
 ---
 
-⚙️ Installation
+# ⚙️ Installation
 
-Clone Repository
+## Clone Repository
 
+```bash
 git clone https://github.com/Nanmathi28/inventra.git
 
 cd inventra
+```
 
 ---
 
-Backend Setup
+# Backend Setup
 
+```bash
 cd inventra_backend
 
 python -m venv venv
@@ -208,35 +213,45 @@ pip install -r requirements.txt
 alembic upgrade head
 
 uvicorn main:app --reload
+```
 
 Backend runs at:
 
+```
 http://127.0.0.1:8000
+```
 
 Swagger API Documentation:
 
+```
 http://127.0.0.1:8000/docs
+```
 
 ---
 
-Frontend Setup
+# Frontend Setup
 
+```bash
 cd inventra_frontend
 
 npm install
 
 npm run dev
+```
 
 Frontend runs at:
 
+```
 http://localhost:5173
+```
 
 ---
 
-Database Configuration
+# Database Configuration
 
-Create a ".env" file inside inventra_backend
+Create a `.env` file inside **inventra_backend**
 
+```env
 DATABASE_URL=postgresql://username:password@localhost:5432/inventra_db
 
 SECRET_KEY=your_secret_key
@@ -244,37 +259,53 @@ SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 
 ACCESS_TOKEN_EXPIRE_MINUTES=60
+```
 
 ---
 
-🔮 Future Enhancements
+# 📷 Screenshots
 
-- Barcode Scanner Integration
-- OCR Prescription Recognition
-- Email Notifications
-- SMS Alerts
-- Mobile Application
-- Supplier Performance Analytics
-- Advanced AI Forecasting
-- Sales Analytics Dashboard
-- Multi-Branch Pharmacy Support
+*Add screenshots of the following pages:*
 
----
-
-👥 Team
-
-- Nanmathi Balachandran
-- Arya Pandaram
+* Landing Page
+* Login Page
+* Dashboard
+* Inventory Management
+* Medicine Management
+* Forecast Dashboard
+* Alerts
+* Prescription Upload
 
 ---
 
-📄 License
+# 🔮 Future Enhancements
+
+* Barcode Scanner Integration
+* OCR Prescription Recognition
+* Email Notifications
+* SMS Alerts
+* Mobile Application
+* Supplier Performance Analytics
+* Advanced AI Forecasting
+* Sales Analytics Dashboard
+* Multi-Branch Pharmacy Support
+
+---
+
+# 👥 Team
+
+* **Nanmathi Balachandran**
+* **Arya Pandaram**
+
+---
+
+# 📄 License
 
 This project was developed for educational, academic, and learning purposes.
 
 ---
 
-⭐ Support
+# ⭐ Support
 
 If you found this project useful, consider giving it a ⭐ on GitHub!
 
