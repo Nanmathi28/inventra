@@ -8,7 +8,7 @@ from app.auth.dependencies import get_current_user
 from app.models.alert import Alert, AlertStatus
 
 import cloudinary.uploader
-from app.core.cloudinary_config import *
+from app.config import cloudinary_config
 
 import shutil
 import os
