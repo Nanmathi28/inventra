@@ -66,7 +66,7 @@ export default function Login() {
         </div>
 
 
-        <p className="relative text-blue-300 text-xs">Final Year Research Project · 2026</p>
+        <p className="relative text-blue-300 text-xs">Internship Program 2026</p>
       </div>
 
       {/* Right panel — login form */}

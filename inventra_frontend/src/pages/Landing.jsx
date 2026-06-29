@@ -288,7 +288,7 @@ export default function Landing() {
             <span className="font-bold text-gray-800 dark:text-white">Inventra</span>
             <span className="text-gray-400 text-xs">— Predictive Inventory Intelligence Platform</span>
           </div>
-          <p className="text-xs text-gray-400">Final Year Research Project · 2026</p>
+          <p className="text-xs text-gray-400">Internship Program 2026</p>
         </div>
       </footer>
     </div>
