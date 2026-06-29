@@ -259,6 +259,7 @@ SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 
 ACCESS_TOKEN_EXPIRE_MINUTES=60
+```
 
 ---
 
@@ -292,5 +293,6 @@ This project was developed for educational, academic, and learning purposes.
 # ⭐ Support
 
 If you found this project useful, consider giving it a ⭐ on GitHub!
+
 
 
