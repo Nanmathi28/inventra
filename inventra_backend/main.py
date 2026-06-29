@@ -43,7 +43,7 @@ app.mount(
 logger.info(f"CORS Origins: Allowing all origins for development")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://inventra-nanmathi.vercel.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
