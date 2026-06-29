@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Sun, Moon, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import {api, uploadPrescription, getPrescriptions} from "../../services/api";
+import { api, uploadPrescription, getPrescriptions } from "../../services/api";
 
 function StatusIcon({ status }) {
   if (status === 'healthy') return <CheckCircle size={15} className="text-green-500" />;
@@ -207,7 +207,7 @@ export default function CustomerPortal() {
         <div className="grid grid-cols-3 gap-3">
           {[
             { icon: Package, label: 'Available Medicines', value: filtered.filter(m => m.available).length, color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' },
-            {icon: FileText, label: 'Active Prescriptions', value: prescriptions.filter(p => p.status === "Approved").length, color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' },
+            { icon: FileText, label: 'Active Prescriptions', value: prescriptions.filter(p => p.status === "Approved").length, color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' },
             { icon: Clock, label: 'Total Orders', value: orders.length, color: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20' },
           ].map((s, i) => {
             const Icon = s.icon;
@@ -314,8 +314,16 @@ export default function CustomerPortal() {
             className="space-y-4"
           >
 
-            <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl cursor-pointer hover:bg-blue-700 transition-colors">
-              {uploading ? "Uploading..." : "Upload Prescription"}
+            <label className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-blue-300 rounded-2xl cursor-pointer bg-blue-50 hover:bg-blue-100 transition">
+              <FileText size={40} className="text-blue-600 mb-3" />
+
+              <p className="text-lg font-semibold text-gray-700">
+                {uploading ? "Uploading..." : "Click to Upload Prescription"}
+              </p>
+
+              <p className="text-sm text-gray-500 mt-1">
+                PDF, JPG, JPEG or PNG
+              </p>
 
               <input
                 type="file"
@@ -347,14 +355,23 @@ export default function CustomerPortal() {
                         {" "}
                         {new Date(p.uploaded_at).toLocaleDateString()}
                       </p>
+
+                      <a
+                        href={p.file_path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                      >
+                        View Prescription
+                      </a>
                     </div>
 
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${p.status === "Pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : p.status === "Approved"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : p.status === "Approved"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
                         }`}
                     >
                       {p.status}

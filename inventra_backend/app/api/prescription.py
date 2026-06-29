@@ -7,6 +7,9 @@ from app.schemas.prescription import PrescriptionResponse
 from app.auth.dependencies import get_current_user
 from app.models.alert import Alert, AlertStatus
 
+import cloudinary.uploader
+from app.core.cloudinary_config import *
+
 import shutil
 import os
 from typing import List
@@ -24,14 +27,13 @@ def upload_prescription(
     current_user: User = Depends(get_current_user),
 ):
 
-    upload_dir = "uploads/prescriptions"
+    upload_result = cloudinary.uploader.upload(
+        file.file,
+        folder="inventra/prescriptions",
+        resource_type="auto"
+    )
 
-    os.makedirs(upload_dir, exist_ok=True)
-
-    file_path = os.path.join(upload_dir, file.filename)
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    file_path = upload_result["secure_url"]
 
     prescription = Prescription(
         user_id=current_user.id,
