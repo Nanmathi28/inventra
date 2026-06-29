@@ -1,6 +1,4 @@
 
-💊 Inventra – AI-Powered Smart Pharmacy Inventory Management System
-=======
 # 💊 Inventra – AI-Powered Smart Pharmacy Inventory Management System
 >>>>>>> 4d17238d4bf93ad332b486515aad277bbd5f4a78
 
