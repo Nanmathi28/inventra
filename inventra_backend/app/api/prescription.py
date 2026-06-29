@@ -52,7 +52,7 @@ def upload_prescription(
             f"Prescription Uploaded\n"
             f"Patient: {current_user.full_name}\n"
             f"Prescription ID: {prescription.id}\n"
-            f"File: {prescription.file_name}"
+            f"File: {prescription.file_path}"
         ),
         status=AlertStatus.ACTIVE,
     )

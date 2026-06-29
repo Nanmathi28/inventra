@@ -306,15 +306,11 @@ export default function Alerts() {
 
                         <button
                           onClick={() => {
+                            const file = a.message.match(/File:\s*(.*)/)?.[1];
 
-                            const file =
-                              a.message.match(/File:\s*(.*)/)?.[1];
-
-                            window.open(
-                              `http://127.0.0.1:8000/uploads/prescriptions/${file}`,
-                              "_blank"
-                            );
-
+                            if (file) {
+                              window.open(file, "_blank");
+                            }
                           }}
                           className="flex items-center gap-2 px-4 py-2 rounded-lg border border-indigo-300 text-indigo-600 hover:bg-indigo-50"
                         >
