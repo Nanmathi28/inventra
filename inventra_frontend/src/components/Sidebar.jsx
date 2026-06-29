@@ -16,7 +16,6 @@ const allNavItems = [
   { to: '/alerts', label: 'Alert Center', icon: Bell, roles: ['admin', 'pharmacist'] },
   { to: '/reports', label: 'Reports & Analytics', icon: BarChart2, roles: ['admin'] },
   { to: '/suppliers', label: 'Suppliers', icon: Truck, roles: ['admin'] },
-  { to: '/assistant', label: 'AI Assistant', icon: Bot, roles: ['admin', 'pharmacist'] },
   { to: '/settings', label: 'Settings', icon: Settings, roles: ['admin', 'pharmacist'] },
 ];
 
